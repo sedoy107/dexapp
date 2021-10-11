@@ -3,7 +3,7 @@ import './components/AppHeader'
 
 import React, {useState, useEffect} from 'react'
 
-//import {HashRouter as Router} from 'react-router-dom'
+import {HashRouter} from 'react-router-dom'
 
 import styled from 'styled-components'
 
@@ -64,6 +64,7 @@ function App() {
   }, [])
 */
   return (
+    <HashRouter>
     <div className="App">
       <PAGE>
         <AppHeader title='DEX'/>
@@ -72,6 +73,7 @@ function App() {
         <AppStatusBar />
       </PAGE>
     </div>
+    </HashRouter>
   )
 }
 
