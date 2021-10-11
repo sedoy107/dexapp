@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import React, { Component } from 'react'
 
 const FOOTER = styled.div`
     height: 5vh;

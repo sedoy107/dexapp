@@ -10,8 +10,7 @@ import '../App.css'
 
 import logo from '../logo.svg';
 import styled from 'styled-components'
-import React, { Component } from 'react'
-import { useEthers, useEtherBalance } from "@usedapp/core";
+// import { useEthers, useEtherBalance } from "@usedapp/core";
 
 
 const Img = styled.img`
@@ -72,19 +71,20 @@ function ConnectButton() {
   `
 
   //handle connect button click
-  function handleConnectWallet() {
-    activateBrowserWallet();
-  }
+  // function handleConnectWallet() {
+  //   activateBrowserWallet();
+  // }
 
-  // useDApp hooks
-  const {activateBrowserWallet, account } = useEthers();
-  const etherBalance = useEtherBalance(account);
-  const btnWalletTitle = account ? etherBalance && JSON.stringify(etherBalance) : 'Connect Wallet'
+  // // useDApp hooks
+  // const {activateBrowserWallet, account } = useEthers();
+  // const etherBalance = useEtherBalance(account);
+  // const btnWalletTitle = account ? etherBalance && JSON.stringify(etherBalance) : 'Connect Wallet'
+  const btnWalletTitle = 'Connect Wallet'
 
   return (
     <Button 
         className='btn btn-warning' 
-        onClick={handleConnectWallet}>
+        onClick={dummyClick}>
             {btnWalletTitle}
     </Button>
   )
