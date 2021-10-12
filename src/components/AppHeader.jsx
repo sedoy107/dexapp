@@ -10,7 +10,6 @@ import '../App.css'
 
 import logo from '../logo.svg';
 import styled from 'styled-components'
-// import { useEthers, useEtherBalance } from "@usedapp/core";
 
 
 const Img = styled.img`
@@ -40,20 +39,20 @@ const Header = styled.header`
 `
 
 const WRAPPER = styled.div`
-    width: 33%;
-    height: inherit;
+  width: 33%;
+  height: inherit;
 `
 const WRAPPER2 = styled(WRAPPER)`
-    width: 34%;
-    text-align: right;
+  width: 34%;
+  text-align: right;
 `
 
 const LogoTitle = styled.div`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  color: white;
 `
 
 const H1 = styled.h1`
@@ -62,70 +61,46 @@ const H1 = styled.h1`
 `
 
 const PageControl = styled.div`
-    color: black
+  color: black
 `
-function ConnectButton() {
 
-  const Button = styled.button`
+const Button = styled.button`
   width: 200px
-  `
-
-  //handle connect button click
-  // function handleConnectWallet() {
-  //   activateBrowserWallet();
-  // }
-
-  // // useDApp hooks
-  // const {activateBrowserWallet, account } = useEthers();
-  // const etherBalance = useEtherBalance(account);
-  // const btnWalletTitle = account ? etherBalance && JSON.stringify(etherBalance) : 'Connect Wallet'
-  const btnWalletTitle = 'Connect Wallet'
-
-  return (
-    <Button 
-        className='btn btn-warning' 
-        onClick={dummyClick}>
-            {btnWalletTitle}
-    </Button>
-  )
-  
-}
+`
 
 const NavigationButton = styled.button`
-    font-weight: bold;
-    opacity: 60%;
+  font-weight: bold;
+  opacity: 60%;
 `
-
-const aDummyClick = async (e) => {
-    console.log(e)
-}
-
-const dummyClick = (e) => {
-    console.log(e);
-}
 
 export default function AppHeader(props) {
 
-    return (
-        <Header>
-            <WRAPPER>
-            <LogoTitle>
-                <Img src={logo} alt="logo" />
-                <H1>
-                    {props.title}
-                </H1>
-            </LogoTitle>
-            </WRAPPER>
-            <WRAPPER>
-                <button type="button" id='btn-transparent' className="btn btn-dark" >Trade</button>
-                <button type="button" id='btn-transparent' className="btn btn-dark">Charts</button>
-                <button type="button" id='btn-transparent' className="btn btn-dark">Orders</button>
-            </WRAPPER>
-            <WRAPPER2>
-              <ConnectButton />
-            </WRAPPER2>
-        </Header>
-    )
+  const btnWalletTitle = 'Connect Wallet'
+
+  return (
+    <Header>
+      <WRAPPER>
+      <LogoTitle>
+        <Img src={logo} alt="logo" />
+        <H1>
+          {props.title}
+        </H1>
+      </LogoTitle>
+      </WRAPPER>
+      <WRAPPER>
+        <button type="button" id='btn-transparent' className="btn btn-dark" >Trade</button>
+        <button type="button" id='btn-transparent' className="btn btn-dark">Charts</button>
+        <button type="button" id='btn-transparent' className="btn btn-dark">Orders</button>
+      </WRAPPER>
+      <WRAPPER2>
+        <Button 
+          className='btn btn-warning' 
+          onClick={(e) => console.log(e)}>
+            {btnWalletTitle}
+        </Button>
+      </WRAPPER2>
+    </Header>
+  )
 }
 
 {/* <PageControl className="btn-group" role="group">

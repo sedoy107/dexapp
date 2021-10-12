@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import {web3Networks, defaultWeb3Network} from '../config/config'
 
 const FOOTER = styled.div`
     height: 5vh;
@@ -11,9 +12,12 @@ const FOOTER = styled.div`
 `
 
 export default function AppStatusBar(props) {
+
+    const StatusBarString = props.appState.netId in web3Networks ? 'Connected to: ' + web3Networks[props.appState.netId].name : 'Not connected'
+
     return (
         <FOOTER>
-            <p>Connected to: Kovan Testnet</p>
+            <p>{StatusBarString}</p>
         </FOOTER>
     )
 }
