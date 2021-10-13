@@ -64,7 +64,7 @@ const PageControl = styled.div`
   color: black
 `
 
-const Button = styled.button`
+const ConnectButton = styled.button`
   width: 200px
 `
 
@@ -93,11 +93,11 @@ export default function AppHeader(props) {
         <button type="button" id='btn-transparent' className="btn btn-dark">Orders</button>
       </WRAPPER>
       <WRAPPER2>
-        <Button 
+        <ConnectButton 
           className='btn btn-warning' 
           onClick={(e) => console.log(e)}>
             {btnWalletTitle}
-        </Button>
+        </ConnectButton>
       </WRAPPER2>
     </Header>
   )

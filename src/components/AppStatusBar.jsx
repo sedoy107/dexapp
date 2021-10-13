@@ -5,19 +5,21 @@ const FOOTER = styled.div`
     height: 5vh;
     width: 100%;
     display: flex;
-    flex-direction: column;
-    justify-content: start;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: flex-end;
     color: #ccc;
 `
 
 export default function AppStatusBar(props) {
 
-    const StatusBarString = props.appState.netId in web3Networks ? 'Connected to: ' + web3Networks[props.appState.netId].name : 'Not connected'
+    const blockNumberString = 'Block: ' + props.appState.blockNumber
+    const statusBarString = props.httpProvider ? 'Connected to: ' + web3Networks[props.httpProvider.netId].name: 'Not connected'
 
     return (
         <FOOTER>
-            <p>{StatusBarString}</p>
+            <p>{statusBarString}</p>
+            <p>{blockNumberString}</p>
         </FOOTER>
     )
 }
