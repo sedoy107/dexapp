@@ -17,6 +17,7 @@ import Web3 from 'web3'
 import {web3Networks, defaultWeb3Network} from './config/config'
 import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
+import { Contract } from 'web3-eth-contract'
 
 // Enums
 const Pages = {
@@ -29,10 +30,12 @@ const Pages = {
 // Default app state
 export interface IAppState {
   accounts: string[],
+  tokens: any[],
   blockNumber: number,
 }
 const defaultAppState = {
   accounts: [],
+  tokens: [],
   blockNumber: 0
 }
 
@@ -58,7 +61,7 @@ function App() {
   // States
   const [httpProvider, setHttpProvider] = useState<IHttpProvider | null>(null)
   const [metamaskProvider, setMetamaskProvider] = useState<IMetamaskProvider | null>(null)
-  const [dexContract, setDexContract] = useState({})
+  const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
 
   // React component lifecycle aliases
@@ -82,23 +85,15 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /**
-   * Initial load of Web3 provider and smart contract
-   * 0. Pre-checks: supported networks [5777,42]
-   * 1. Metamask is not connected: load default network and load Dex contract
-   * 2. Metamask is connected: load supplied network and try to load Dex contract
-   * 3. Metamask changing networks: load new network and try to load Dex contract
-   * 4.
-   */
+  const refreshContractData = async (contract) => {
+     
+  }
+
   const loadNetworkProvider = async (web3Network) => {
     // Connect to the primary network via WebSocket RPC provider
     const httpProvider = new Web3(web3Network.url)
     const netId = await httpProvider.eth.net.getId()
     const currentBlock = await httpProvider.eth.getBlockNumber()
-    setAppState(() => ({
-      blockNumber: currentBlock,
-      accounts: []
-    }))
     // Subscribe for network events to track block header updates
     const subscription = httpProvider.eth.subscribe('newBlockHeaders', (error, result) => {
       if (!error) {
@@ -126,13 +121,40 @@ function App() {
       netId: netId,
       blockHeadSubscription: subscription,
     }))
-    
-    // Initialize dex contract from address and abi
+
+    // Initialize Dex contract from address and abi
     const dex = require('./artifacts/Dex.json')
+    if (!(netId in dex.networks)) {
+      console.log('Dex contract is not found on the given network, netId: ' + netId);
+    }
     const address = dex.networks[netId].address
+    const txHash = dex.networks[netId].transactionHash
+    const { blockNumber } = await httpProvider.eth.getTransaction(txHash)
     const abi = dex.abi;
     const dexContract = await new httpProvider.eth.Contract(abi, address)
     setDexContract(() => dexContract)
+    //const dexData = refreshContractData(dexContract)
+    /**
+     * @TODO
+     * subscribe for Dex events: OrderCreated, OrderFilled, OrderRemoved
+     * 
+     * ^ this needs to be done when the wallet is connected 
+     */
+    const tokens = await getTokens(dexContract)
+    const tokensWithSymbols = tokens.map((t) => ({token:t, symbol:Web3.utils.toAscii(t)}))
+    setAppState(() => ({
+      blockNumber: currentBlock,
+      tokens: tokensWithSymbols,
+      accounts: []
+    }))
+
+  }
+
+  const getTokens = async (contract: Contract) => {
+    const ethTicker = '0x4554480000000000000000000000000000000000000000000000000000000000'
+    const tokens = await contract.methods.getTokenList().call()
+    // Dedup the tokens
+    return [ethTicker].concat([...tokens].sort().filter((i,p,a) => {return !p || i !== a[p - 1]}))
   }
 
   // React Render

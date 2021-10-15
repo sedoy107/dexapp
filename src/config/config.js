@@ -2,7 +2,7 @@
 const web3Networks = {
     5777: {
       id:5777,
-      url: 'ws://127.0.0.1:7545',
+      url: 'ws://127.0.0.1:8545',
       name: 'Local Ganache Chain'
     },
     0x2a: {
