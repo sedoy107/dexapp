@@ -141,7 +141,7 @@ function App() {
      * ^ this needs to be done when the wallet is connected 
      */
     const tokens = await getTokens(dexContract)
-    const tokensWithSymbols = tokens.map((t) => ({token:t, symbol:Web3.utils.toAscii(t)}))
+    const tokensWithSymbols = tokens.map((t) => ({ticker:t, symbol:Web3.utils.toAscii(t)}))
     setAppState(() => ({
       blockNumber: currentBlock,
       tokens: tokensWithSymbols,

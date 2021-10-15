@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import React, {useState, useEffect} from 'react'
-import {Dropdown} from 'bootstrap'
+import { Dropdown } from 'react-bootstrap';
 
 const MAIN_DIV = styled.div`
     display:flex;
@@ -20,21 +20,6 @@ const TOKEN_DIV = styled.div`
 const LIST_DIV = styled.div`
 
 `
-function TokenList(props) {
-    return (
-        props.isVisible ?
-        props.appState.tokens.map((token) => {
-            return (
-                <div>
-                    {token.symbol}
-                </div>
-            )
-        })
-        :
-        <div></div>
-    )
-}
-
 
 export default function TokenPicker(props) {
     // The token price string will conditionally update based on the chosen token
@@ -47,18 +32,26 @@ export default function TokenPicker(props) {
         setDisplayTokenList((prevState) => !prevState)
     }
 
+    const dropDownMenuItems = props.appState.tokens.map((token) => {
+        return (
+            <Dropdown.Item key={token.ticker}>{token.symbol}</Dropdown.Item>
+        )
+    })
+
     return (
         <MAIN_DIV>
         <TOKEN_DIV>
-            <button className='btn btn-primary' onClick={handleTokenButton}>
-                <div>
+            <Dropdown>
+            <Dropdown.Toggle variant="success" id="dropdown-basic">
                 {defaultToken}
-                </div>
-                
-            </button>
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+               {dropDownMenuItems}
+            </Dropdown.Menu>
+            </Dropdown>
             <PRICE_P>$2,522.34</PRICE_P>
         </TOKEN_DIV>
-        <TokenList appState={props.appState} isVisible={displayTokenList}/>
         </MAIN_DIV>
     )
 }
