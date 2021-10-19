@@ -24,17 +24,21 @@ const LIST_DIV = styled.div`
 export default function TokenPicker(props) {
     // The token price string will conditionally update based on the chosen token
 
-    const defaultToken = props.appState.tokens.length > 0 ? props.appState.tokens[0].symbol: ''
+    const defaultToken = props.appState.currentToken ? props.appState.currentToken.symbol: ''
 
-    const [displayTokenList, setDisplayTokenList] = useState(false)
-
-    const handleTokenButton = () => {
-        setDisplayTokenList((prevState) => !prevState)
+    const handleDropdownItemClick = (e) => {
+        props.handleTokenChange({ticker: e.currentTarget.dataset.ticker, symbol: e.currentTarget.dataset.symbol})
     }
 
     const dropDownMenuItems = props.appState.tokens.map((token) => {
         return (
-            <Dropdown.Item key={token.ticker}>{token.symbol}</Dropdown.Item>
+            <Dropdown.Item 
+            key={token.ticker} 
+            onClick={handleDropdownItemClick} 
+            data-ticker={token.ticker} 
+            data-symbol={token.symbol}>
+                {token.symbol}
+            </Dropdown.Item>
         )
     })
 

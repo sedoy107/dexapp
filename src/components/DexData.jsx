@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import React, {useState, useEffect} from 'react'
 
 const MAIN = styled.div`
 `
@@ -52,6 +53,31 @@ const TAB_BUTTON = styled.button`
 `
 
 export default function DexData(props) {
+
+    // const [pairs, setPairs] = useState([])
+
+    // const retrieveTokenPairs = async () => {
+    //     const _pairs = props.appState.tokens
+    //     .filter((item,pos,arr) => (item.ticker !== props.appState.currentToken.ticker))
+    //     .map(async (token) => {
+            
+    //         return ({
+    //             ...token,
+    //             isExists: await props.dexContract.methods.pairs(props.appState.currentToken.ticker, token.ticker).call()
+    //         })
+    //     })
+    //     setPairs(() => _pairs)
+    //     console.log("Tokens retrieved");
+    // }
+
+    // const componentWillMount = async () => {
+    //     await retrieveTokenPairs()
+    // }
+
+    // useEffect(() => {
+    //     componentWillMount()
+    // }, [])
+
     return (
         <MAIN>
             <SUB1>

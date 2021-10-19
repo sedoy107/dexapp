@@ -28,19 +28,25 @@ const Pages = {
 }
 
 // Default app state
+export interface IToken {
+  ticker: string,
+  symbol: string,
+}
 export interface IAppState {
   accounts: string[],
-  tokens: any[],
+  tokens: IToken[],
   blockNumber: number,
+  currentToken: IToken | null,
 }
 const defaultAppState = {
   accounts: [],
   tokens: [],
-  blockNumber: 0
+  blockNumber: 0,
+  currentToken: null,
 }
 
-// IHttpProvider
-export interface IHttpProvider {
+// IRpcProvider
+export interface IRpcProvider {
   provider: Web3,
   netId: number,
   blockHeadSubscription: Subscription<BlockHeader>,
@@ -59,7 +65,7 @@ const PAGE = styled.div`
 
 function App() {
   // States
-  const [httpProvider, setHttpProvider] = useState<IHttpProvider | null>(null)
+  const [rpcProvider, setRpcProvider] = useState<IRpcProvider | null>(null)
   const [metamaskProvider, setMetamaskProvider] = useState<IMetamaskProvider | null>(null)
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
@@ -74,8 +80,8 @@ function App() {
     componentWillMount()
     console.log("Web3 init completed")
     return () => {
-      if(httpProvider) {
-        httpProvider.blockHeadSubscription.unsubscribe(function(error, success){
+      if(rpcProvider) {
+        rpcProvider.blockHeadSubscription.unsubscribe(function(error, success){
           if (success) {
               console.log('Successfully unsubscribed!');
           }
@@ -85,17 +91,13 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const refreshContractData = async (contract) => {
-     
-  }
-
   const loadNetworkProvider = async (web3Network) => {
     // Connect to the primary network via WebSocket RPC provider
-    const httpProvider = new Web3(web3Network.url)
-    const netId = await httpProvider.eth.net.getId()
-    const currentBlock = await httpProvider.eth.getBlockNumber()
+    const rpcProvider = new Web3(web3Network.url)
+    const netId = await rpcProvider.eth.net.getId()
+    const currentBlock = await rpcProvider.eth.getBlockNumber()
     // Subscribe for network events to track block header updates
-    const subscription = httpProvider.eth.subscribe('newBlockHeaders', (error, result) => {
+    const subscription = rpcProvider.eth.subscribe('newBlockHeaders', (error, result) => {
       if (!error) {
         console.log("Subscribed: " + result);
         return;
@@ -116,8 +118,8 @@ function App() {
     })
     .on("error", console.error);
 
-    setHttpProvider((prevState) => ({
-      provider: httpProvider, 
+    setRpcProvider((prevState) => ({
+      provider: rpcProvider, 
       netId: netId,
       blockHeadSubscription: subscription,
     }))
@@ -129,23 +131,25 @@ function App() {
     }
     const address = dex.networks[netId].address
     const txHash = dex.networks[netId].transactionHash
-    const { blockNumber } = await httpProvider.eth.getTransaction(txHash)
+    const { blockNumber } = await rpcProvider.eth.getTransaction(txHash)
     const abi = dex.abi;
-    const dexContract = await new httpProvider.eth.Contract(abi, address)
+    const dexContract = await new rpcProvider.eth.Contract(abi, address)
     setDexContract(() => dexContract)
-    //const dexData = refreshContractData(dexContract)
     /**
      * @TODO
      * subscribe for Dex events: OrderCreated, OrderFilled, OrderRemoved
      * 
      * ^ this needs to be done when the wallet is connected 
      */
+    // Get token list from the contract
     const tokens = await getTokens(dexContract)
     const tokensWithSymbols = tokens.map((t) => ({ticker:t, symbol:Web3.utils.toAscii(t)}))
+    
     setAppState(() => ({
       blockNumber: currentBlock,
       tokens: tokensWithSymbols,
-      accounts: []
+      accounts: [],
+      currentToken: tokensWithSymbols[0]
     }))
 
   }
@@ -157,15 +161,24 @@ function App() {
     return [ethTicker].concat([...tokens].sort().filter((i,p,a) => {return !p || i !== a[p - 1]}))
   }
 
+  const handleTokenChange = (newCurrentToken) => {
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        currentToken: newCurrentToken
+      }
+    })
+  }
+
   // React Render
   return (
     <HashRouter>
     <div className="App">
       <PAGE>
         <AppHeader title='DEX' appState={appState}/>
-        <TokenPicker appState={appState}/>
-        <DexData appState={appState}/>
-        <AppStatusBar httpProvider={httpProvider} appState={appState}/>
+        <TokenPicker appState={appState} handleTokenChange={handleTokenChange}/>
+        <DexData appState={appState} dexContract={dexContract}/>
+        <AppStatusBar rpcProvider={rpcProvider} appState={appState}/>
       </PAGE>
     </div>
     </HashRouter>
