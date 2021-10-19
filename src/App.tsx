@@ -14,7 +14,7 @@ import TokenPicker from './components/TokenPicker'
 import DexData from './components/DexData'
 import AppStatusBar from './components/AppStatusBar'
 import Web3 from 'web3'
-import {web3Networks, defaultWeb3Network} from './config/config'
+import { defaultWeb3Network } from './config/config'
 import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
@@ -70,15 +70,64 @@ function App() {
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
 
-  // React component lifecycle aliases
-  const componentWillMount = async () => {
-    await loadNetworkProvider(defaultWeb3Network)
-  }
-
-  // useEffect hooks
+  /**
+   * @dev Initialize Network
+   * 
+   * Side effect depends on: none (should run only once)
+   *  
+   * Cleanup: remove the subscription for network events
+   * */ 
   useEffect(() => {
+
+    /**
+     * - Initialize network
+     * - Subscribe for network events
+     * - Set rpcProvider state
+     */
+    const initNetwork = async () => {
+      // Connect to the primary network via WebSocket RPC provider
+      const rpcProvider = new Web3(defaultWeb3Network.url)
+      const netId = await rpcProvider.eth.net.getId()
+      // Subscribe for newBlockHeaders events to track block updates
+      const subscription = rpcProvider.eth.subscribe('newBlockHeaders', (error, result) => {
+        if (!error) {
+          console.log("Subscribed: " + result);
+          return;
+        }
+        console.error(error);
+      })
+      .on("connected", function(subscriptionId){
+          console.log(subscriptionId);
+      })
+      .on("data", function(blockHeader){
+          console.log(blockHeader);
+          setAppState((prevState) => ({...prevState, blockNumber: blockHeader.number}))
+      })
+      .on("error", console.error);
+  
+      setRpcProvider((prevState) => ({
+        provider: rpcProvider, 
+        netId: netId,
+        blockHeadSubscription: subscription,
+      }))
+
+      return true
+    }
+
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      const bRes = await initNetwork()
+      console.log(bRes ? '[initNetwork] - Success' : '[initNetwork]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
     componentWillMount()
-    console.log("Web3 init completed")
+
+    // useEffect cleanup:
     return () => {
       if(rpcProvider) {
         rpcProvider.blockHeadSubscription.unsubscribe(function(error, success){
@@ -91,75 +140,134 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const loadNetworkProvider = async (web3Network) => {
-    // Connect to the primary network via WebSocket RPC provider
-    const rpcProvider = new Web3(web3Network.url)
-    const netId = await rpcProvider.eth.net.getId()
-    const currentBlock = await rpcProvider.eth.getBlockNumber()
-    // Subscribe for network events to track block header updates
-    const subscription = rpcProvider.eth.subscribe('newBlockHeaders', (error, result) => {
-      if (!error) {
-        console.log("Subscribed: " + result);
-        return;
-      }
-      console.error(error);
-    })
-    .on("connected", function(subscriptionId){
-        console.log(subscriptionId);
-    })
-    .on("data", function(blockHeader){
-        console.log(blockHeader);
-        setAppState((prevState) => {
-          return {
-            ...prevState,
-            blockNumber: blockHeader.number
-          }
-        })
-    })
-    .on("error", console.error);
+  /**
+   * @dev Initialize Smart Contract
+   * 
+   * Side effect depends on: rpcProvider state
+   *  
+   * Cleanup: remove the subscription for contract events
+   * */ 
+  useEffect(() => {
 
-    setRpcProvider((prevState) => ({
-      provider: rpcProvider, 
-      netId: netId,
-      blockHeadSubscription: subscription,
-    }))
-
-    // Initialize Dex contract from address and abi
-    const dex = require('./artifacts/Dex.json')
-    if (!(netId in dex.networks)) {
-      console.log('Dex contract is not found on the given network, netId: ' + netId);
-    }
-    const address = dex.networks[netId].address
-    const txHash = dex.networks[netId].transactionHash
-    const { blockNumber } = await rpcProvider.eth.getTransaction(txHash)
-    const abi = dex.abi;
-    const dexContract = await new rpcProvider.eth.Contract(abi, address)
-    setDexContract(() => dexContract)
     /**
-     * @TODO
-     * subscribe for Dex events: OrderCreated, OrderFilled, OrderRemoved
-     * 
-     * ^ this needs to be done when the wallet is connected 
+     * - Initialize smart contract
+     * - Subscribe for smart contract events
+     * - Set dexContract state
      */
-    // Get token list from the contract
-    const tokens = await getTokens(dexContract)
-    const tokensWithSymbols = tokens.map((t) => ({ticker:t, symbol:Web3.utils.toAscii(t)}))
-    
-    setAppState(() => ({
-      blockNumber: currentBlock,
-      tokens: tokensWithSymbols,
-      accounts: [],
-      currentToken: tokensWithSymbols[0]
-    }))
+    const initContract = async () => {
+      // Do nothing if the rpcProvider is not initialized
+      if (!rpcProvider) {
+        return false
+      }
 
-  }
+      // Read contract build JSON
+      const dexBuildObject = require('./artifacts/Dex.json')
+      
+      // Check if the contract was deployed to the given network
+      if (!dexBuildObject.networks.hasOwnProperty(rpcProvider.netId)) {
+        console.error('Contract hasn\'t been deployed to the given network')
+        return false
+      }
 
-  const getTokens = async (contract: Contract) => {
-    const ethTicker = '0x4554480000000000000000000000000000000000000000000000000000000000'
-    const tokens = await contract.methods.getTokenList().call()
-    // Dedup the tokens
-    return [ethTicker].concat([...tokens].sort().filter((i,p,a) => {return !p || i !== a[p - 1]}))
-  }
+      // Initialize Dex contract from address and abi
+      const address = dexBuildObject.networks[rpcProvider.netId].address
+      const abi = dexBuildObject.abi;
+      const dexContract = await new rpcProvider.provider.eth.Contract(abi, address)
+      
+      /**
+       * @TODO
+       * subscribe for Dex events: OrderCreated, OrderFilled, OrderRemoved
+       * 
+       * ^ this needs to be done when the wallet is connected 
+       * 
+       * Use tx hash:
+       * const txHash = dexBuildObject.networks[rpcProvider.netId].transactionHash
+       */
+      setDexContract(() => dexContract)
+
+      return true
+    }
+
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      const bRes = await initContract()
+      console.log(bRes ? '[initContract] - Success' : '[initContract]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+    componentWillMount()
+
+    // useEffect cleanup:
+    // return the cleanup here
+
+  }, [rpcProvider])
+
+  /**
+   * @dev Initialize App State
+   * 
+   * Side effect depends on: dexContract state
+   *  
+   * Cleanup: n/a
+   * */ 
+  useEffect (() => {
+
+    /**
+     * - Initialize smart contract
+     * - Subscribe for smart contract events
+     * - Set dexContract and appState states
+     */
+    const updateApp = async () => {
+
+      // Aux function to get tokens from the contract 
+      const getTokens = async (contract: Contract) => {
+        const ethTicker = '0x4554480000000000000000000000000000000000000000000000000000000000'
+        const tokens = await contract.methods.getTokenList().call()
+        return [ethTicker].concat([...tokens].sort().filter((i,p,a) => {return !p || i !== a[p - 1]}))
+      }
+      
+      // Check if any of the required states aren't ready yet
+      if (!dexContract || !rpcProvider) {
+        return false
+      }
+
+      // Get current block number
+      const currentBlock = await rpcProvider.provider.eth.getBlockNumber()
+
+      // Get token list from the contract
+      const tokens = await getTokens(dexContract)
+      const tokensWithSymbols = tokens.map((t) => ({ticker:t, symbol:Web3.utils.toAscii(t)}))
+
+      setAppState((prevState) => ({
+        ...prevState,
+        blockNumber: currentBlock,
+        tokens: tokensWithSymbols,
+        currentToken: tokensWithSymbols[0]
+      }))
+
+      return true
+    }
+
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      const bRes = await updateApp()
+      console.log(bRes ? '[appUpdate] - Success' : '[appUpdate]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+    componentWillMount()
+
+    // useEffect cleanup:
+    // return the cleanup here
+
+  }, [dexContract, rpcProvider])
 
   const handleTokenChange = (newCurrentToken) => {
     setAppState((prevState) => {

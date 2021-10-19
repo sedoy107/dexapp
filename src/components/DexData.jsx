@@ -54,29 +54,42 @@ const TAB_BUTTON = styled.button`
 
 export default function DexData(props) {
 
-    // const [pairs, setPairs] = useState([])
+    const [pairs, setPairs] = useState([])
 
-    // const retrieveTokenPairs = async () => {
-    //     const _pairs = props.appState.tokens
-    //     .filter((item,pos,arr) => (item.ticker !== props.appState.currentToken.ticker))
-    //     .map(async (token) => {
-            
-    //         return ({
-    //             ...token,
-    //             isExists: await props.dexContract.methods.pairs(props.appState.currentToken.ticker, token.ticker).call()
-    //         })
-    //     })
-    //     setPairs(() => _pairs)
-    //     console.log("Tokens retrieved");
-    // }
+    useEffect(() => {
 
-    // const componentWillMount = async () => {
-    //     await retrieveTokenPairs()
-    // }
+        const getTokenPairs = async () => {
 
-    // useEffect(() => {
-    //     componentWillMount()
-    // }, [])
+            if (!props.appState.currentToken || !props.appState.tokens.length || !props.dexContract) {
+                return false
+            }
+
+            const pairPromises = props.appState.tokens
+            .filter((item,pos,arr) => (item.ticker !== props.appState.currentToken.ticker))
+            .map(async (token) => {
+
+                //debugger
+                
+                return ({
+                    ...token,
+                    isValid: await props.dexContract.methods.pairs(props.appState.currentToken.ticker, token.ticker).call()
+                })
+            })
+            await Promise.all(pairPromises)
+            .then((pairs) => {
+                setPairs(() => pairs)
+            })
+
+            return true
+        }
+
+        const componentWillMount = async () => {
+            const bRes = await getTokenPairs()
+            console.log(bRes ? '[getTokenPairs] - success' : '[getTokenPairs] - failure');
+        }
+
+        componentWillMount()
+    }, [props.appState.currentToken, props.appState.tokens, props.dexContract])
 
     return (
         <MAIN>
