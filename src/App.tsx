@@ -1,8 +1,7 @@
 import './App.css'
 import './components/AppHeader'
 
-import React, {useState, useEffect} from 'react'
-
+import React, {useState, useEffect, useCallback} from 'react'
 import {HashRouter} from 'react-router-dom'
 
 import styled from 'styled-components'
@@ -35,14 +34,18 @@ export interface IToken {
 export interface IAppState {
   accounts: string[],
   tokens: IToken[],
+  pairedTokenSet: IToken[],
   blockNumber: number,
-  currentToken: IToken | null,
+  baseToken: IToken | null,
+  pairedToken: IToken | null,
 }
 const defaultAppState = {
   accounts: [],
   tokens: [],
+  pairedTokenSet: [],
   blockNumber: 0,
-  currentToken: null,
+  baseToken: null,
+  pairedToken: null,
 }
 
 // IRpcProvider
@@ -220,7 +223,7 @@ function App() {
      * - Subscribe for smart contract events
      * - Set dexContract and appState states
      */
-    const updateApp = async () => {
+    const initApp = async () => {
 
       // Aux function to get tokens from the contract 
       const getTokens = async (contract: Contract) => {
@@ -245,7 +248,7 @@ function App() {
         ...prevState,
         blockNumber: currentBlock,
         tokens: tokensWithSymbols,
-        currentToken: tokensWithSymbols[0]
+        baseToken: tokensWithSymbols[0]
       }))
 
       return true
@@ -255,8 +258,8 @@ function App() {
      * @dev React component lifecycle alias
      * */
     const componentWillMount = async () => {
-      const bRes = await updateApp()
-      console.log(bRes ? '[appUpdate] - Success' : '[appUpdate]: failure');
+      const bRes = await initApp()
+      console.log(bRes ? '[initApp] - Success' : '[initApp]: failure');
     }
 
     /**
@@ -265,15 +268,82 @@ function App() {
     componentWillMount()
 
     // useEffect cleanup:
-    // return the cleanup here
+    // return the cleanup callback
 
   }, [dexContract, rpcProvider])
 
-  const handleTokenChange = (newCurrentToken) => {
+  /**
+   * @dev Update Dex
+   * 
+   * Side effect depends on: baseToken
+   *  
+   * Cleanup: n/a
+   * */ 
+  useEffect (() => {
+
+    const getPairedTokens = async () => {
+
+      if (!appState.baseToken || !dexContract) {
+          return false
+      }
+
+      const pairPromises = appState.tokens
+      .filter((item,pos,arr) => (item.ticker !== appState.baseToken.ticker))
+      .map(async (token) => {
+          
+          return ({
+              ...token,
+              isValid: await dexContract.methods.pairs(appState.baseToken.ticker, token.ticker).call()
+          })
+      })
+      await Promise.all(pairPromises)
+      .then((pairs) => {
+          const pairedTokenSet = pairs.filter((item,pos,arr) => (item.isValid === true)).map((token) => ({ticker: token.ticker, symbol: token.symbol}))
+          const pairedToken = pairedTokenSet.length > 0 ? pairedTokenSet[0] : null
+          setAppState((prevState) => {
+            return {
+              ...prevState,
+              pairedTokenSet: pairedTokenSet,
+              pairedToken: pairedToken
+            }
+          })
+      })
+      
+      return true
+  }
+    
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      const bRes = await getPairedTokens()
+      console.log(bRes ? '[getPairedTokens] - Success' : '[getPairedTokens]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+    componentWillMount()
+
+    //useEffect cleanup:
+    // return the cleanup callback
+
+  }, [appState.baseToken])
+
+  const handleBaseTokenChange = (newBaseToken) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        currentToken: newCurrentToken
+        baseToken: newBaseToken
+      }
+    })
+  }
+
+  const handlePairedTokenChange = (newPairedToken) => {
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        pairedToken: newPairedToken
       }
     })
   }
@@ -284,7 +354,11 @@ function App() {
     <div className="App">
       <PAGE>
         <AppHeader title='DEX' appState={appState}/>
-        <TokenPicker appState={appState} handleTokenChange={handleTokenChange}/>
+        <TokenPicker 
+        appState={appState} 
+        dexContract={dexContract} 
+        handleBaseTokenChange={handleBaseTokenChange}
+        handlePairedTokenChange={handlePairedTokenChange}/>
         <DexData appState={appState} dexContract={dexContract}/>
         <AppStatusBar rpcProvider={rpcProvider} appState={appState}/>
       </PAGE>

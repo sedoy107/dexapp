@@ -54,49 +54,12 @@ const TAB_BUTTON = styled.button`
 
 export default function DexData(props) {
 
-    const [pairs, setPairs] = useState([])
-
-    useEffect(() => {
-
-        const getTokenPairs = async () => {
-
-            if (!props.appState.currentToken || !props.appState.tokens.length || !props.dexContract) {
-                return false
-            }
-
-            const pairPromises = props.appState.tokens
-            .filter((item,pos,arr) => (item.ticker !== props.appState.currentToken.ticker))
-            .map(async (token) => {
-
-                //debugger
-                
-                return ({
-                    ...token,
-                    isValid: await props.dexContract.methods.pairs(props.appState.currentToken.ticker, token.ticker).call()
-                })
-            })
-            await Promise.all(pairPromises)
-            .then((pairs) => {
-                setPairs(() => pairs)
-            })
-
-            return true
-        }
-
-        const componentWillMount = async () => {
-            const bRes = await getTokenPairs()
-            console.log(bRes ? '[getTokenPairs] - success' : '[getTokenPairs] - failure');
-        }
-
-        componentWillMount()
-    }, [props.appState.currentToken, props.appState.tokens, props.dexContract])
-
     return (
         <MAIN>
             <SUB1>
                 <SUB111>
                     <TITLE>
-                        <P>Pairs</P>
+                        <P>Chart</P>
                     </TITLE>
                 </SUB111>
                 <SUB112>
