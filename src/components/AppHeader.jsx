@@ -10,6 +10,7 @@ import '../App.css'
 
 import logo from '../logo.svg';
 import styled from 'styled-components'
+import { Button } from 'react-bootstrap';
 
 
 const Img = styled.img`
@@ -38,73 +39,52 @@ const Header = styled.header`
   justify-content: space-between;
 `
 
-const WRAPPER = styled.div`
-  width: 33%;
-  height: inherit;
-`
-const WRAPPER2 = styled(WRAPPER)`
-  width: 34%;
-  text-align: right;
+const Title = styled.h1`
+  font-size: 2rem;
+  font-weight: bold;
 `
 
-const LogoTitle = styled.div`
+const Logo = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
   color: white;
+  width: 200px;
 `
 
-const H1 = styled.h1`
-  font-size: 2rem;
-  font-weight: bold;
-`
-
-const PageControl = styled.div`
-  color: black
-`
-
-const ConnectButton = styled.button`
+const ConnectButton = styled(Button)`
   width: 200px
 `
 
-const NavigationButton = styled.button`
-  font-weight: bold;
-  opacity: 60%;
+const PageButton = styled(Button)`
+  width: 200px
 `
 
 export default function AppHeader(props) {
 
+  const hrefOptions = {
+    0: {title: 'Launch App', href: '#/swaps'},
+    1: {title: 'Token Feed', href: '#/feed'},
+    2: {title: 'Swap Tokens', href: '#/swaps'}
+  }
+  
   const btnWalletTitle = 'Connect Wallet'
+
+  const handlePageButtonClick = (e, h) => {
+    document.location.href = h;
+  }
 
   return (
     <Header>
-      <WRAPPER>
-      <LogoTitle>
+      <Logo>
         <Img src={logo} alt="logo" />
-        <H1>
+        <Title>
           {props.title}
-        </H1>
-      </LogoTitle>
-      </WRAPPER>
-      <WRAPPER>
-        <button type="button" id='btn-transparent' className="btn btn-dark" >Trade</button>
-        <button type="button" id='btn-transparent' className="btn btn-dark">Charts</button>
-        <button type="button" id='btn-transparent' className="btn btn-dark">Orders</button>
-      </WRAPPER>
-      <WRAPPER2>
-        <ConnectButton 
-          className='btn btn-warning' 
-          onClick={(e) => console.log(e)}>
-            {btnWalletTitle}
-        </ConnectButton>
-      </WRAPPER2>
+        </Title>
+      </Logo>
+      <PageButton variant="info" onClick={(e) => handlePageButtonClick(e, hrefOptions[props.pageId].href)}>{hrefOptions[props.pageId].title}</PageButton>
+      <ConnectButton variant="warning" hidden={props.pageId === 0}>{btnWalletTitle}</ConnectButton>{' '}
     </Header>
   )
 }
-
-{/* <PageControl className="btn-group" role="group">
-                <button type="button" id='btn-transparent' className="btn btn-dark" >Trade</button>
-                <button type="button" id='btn-transparent' className="btn btn-dark">Charts</button>
-                <button type="button" id='btn-transparent' className="btn btn-dark">Orders</button>
-            </PageControl> */}

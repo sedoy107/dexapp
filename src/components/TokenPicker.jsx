@@ -1,11 +1,11 @@
 import styled from 'styled-components'
 import React, {useState, useEffect} from 'react'
-import { Dropdown } from 'react-bootstrap';
+import { Dropdown, Button } from 'react-bootstrap';
 
 const MAIN_DIV = styled.div`
     display:flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-start;
 `
 
@@ -20,8 +20,24 @@ const TOKEN_DIV = styled.div`
     align-items: flex-start;
     justify-content: flex-start;
 `
-const LIST_DIV = styled.div`
 
+const BaseTokenDropdownToggle = styled(Dropdown.Toggle)`
+    border-top-left-radius: .25rem;
+    border-top-right-radius: 0%;
+    border-bottom-right-radius: 0%;
+    border-bottom-left-radius: .25rem;
+    min-width: 100px;
+`
+const PairedTokenDropdownToggle = styled(Dropdown.Toggle)`
+    border-top-left-radius: 0%;
+    border-top-right-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+    border-bottom-left-radius: 0%;
+    min-width: 100px;
+`
+const SwapTokenButton = styled(Button)`
+    border-radius: 0%; 
+    margin: 10px, 0px, 10px, 0px;
 `
 
 export default function TokenPicker(props) {
@@ -46,7 +62,8 @@ export default function TokenPicker(props) {
     })
 
     // Paired Token
-    const currentPairedTokenDisplayName = props.appState.pairedToken ? props.appState.pairedToken.symbol: ''
+    const currentPairedTokenDisplayName = props.appState.pairedToken ? props.appState.pairedToken.symbol: 'None'
+    const isDisabled = props.appState.pairedToken ? false: true
 
     const handlePairedTokenItemClick = (e) => {
         props.handlePairedTokenChange( {ticker: e.currentTarget.dataset.ticker, symbol: e.currentTarget.dataset.symbol} )
@@ -68,18 +85,20 @@ export default function TokenPicker(props) {
         <MAIN_DIV>
         <TOKEN_DIV>
             <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
+            <BaseTokenDropdownToggle variant="primary">
                 {currentBaseTokenDisplayName}
-            </Dropdown.Toggle>
+            </BaseTokenDropdownToggle>
             <Dropdown.Menu>
                {baseTokenMenuItems}
             </Dropdown.Menu>
             </Dropdown>
 
+            <SwapTokenButton variant="primary" hidden={isDisabled}><i className="fas fa-sync-alt"></i></SwapTokenButton>{' '}
+
             <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
+            <PairedTokenDropdownToggle variant="primary" disabled={isDisabled}>
                 {currentPairedTokenDisplayName}
-            </Dropdown.Toggle>
+            </PairedTokenDropdownToggle>
             <Dropdown.Menu>
                {pairedTokenMenuItems}
             </Dropdown.Menu>

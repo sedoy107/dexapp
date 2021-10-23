@@ -4,11 +4,3 @@
   background-image:radial-gradient(circle at top,
   #004b77 0%, #222 100%);
 }
-
-#btn-transparent {
-  color: #fff;
-  background-color: #000;
-  border-color: #303030;
-  opacity: 60%;
-  font-weight: bold;
-}

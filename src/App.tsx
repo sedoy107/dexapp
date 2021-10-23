@@ -1,30 +1,23 @@
-import './App.css'
-import './components/AppHeader'
-
+// React tools
 import React, {useState, useEffect, useCallback} from 'react'
-import {HashRouter} from 'react-router-dom'
-
+import {HashRouter as Router, Route, Redirect} from 'react-router-dom'
+// Styling libraries
 import styled from 'styled-components'
-
 import 'bootswatch/dist/darkly/bootstrap.min.css'
 import '@fortawesome/fontawesome-free/js/all'
+// App components
 import AppHeader from './components/AppHeader'
 import TokenPicker from './components/TokenPicker'
 import DexData from './components/DexData'
 import AppStatusBar from './components/AppStatusBar'
-import Web3 from 'web3'
+import Welcome from './components/Welcome'
+// Config
 import { defaultWeb3Network } from './config/config'
+// Web3 imports
+import Web3 from 'web3'
 import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
-
-// Enums
-const Pages = {
-  HOME:'HOME',
-  TRADE:'TRADE',
-  CHARTS:'CHARTS',
-  ORDER:'ORDERS'
-}
 
 // Default app state
 export interface IToken {
@@ -61,9 +54,22 @@ export interface IMetamaskProvider {
   netId: number
 }
 
+// IPage
+export interface IPage {
+  id: number,
+  title: string
+}
+
 // Styles
-const PAGE = styled.div`
-  margin: 0px 10px 0px 10px
+const PageContainer = styled.div`
+  margin: 0px 10px 0px 10px;
+`
+
+const Background = styled.div`
+  text-align: center;
+  height: 100vh;
+  background-image:radial-gradient(circle at top,
+  #004b77 0%, #222 100%);
 `
 
 function App() {
@@ -350,21 +356,45 @@ function App() {
 
   // React Render
   return (
-    <HashRouter>
-    <div className="App">
-      <PAGE>
-        <AppHeader title='DEX' appState={appState}/>
-        <TokenPicker 
-        appState={appState} 
-        dexContract={dexContract} 
-        handleBaseTokenChange={handleBaseTokenChange}
-        handlePairedTokenChange={handlePairedTokenChange}/>
-        <DexData appState={appState} dexContract={dexContract}/>
-        <AppStatusBar rpcProvider={rpcProvider} appState={appState}/>
-      </PAGE>
-    </div>
-    </HashRouter>
+    <Router>
+      <Route exact path="/">
+        <Redirect to="/welcome" />
+      </Route>
+      <Route exact path='/welcome'>
+        <Background>
+          <PageContainer>
+            <AppHeader title='DEX' appState={appState} pageId={0}/>
+            <Welcome />
+            <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={true}/>
+          </PageContainer>
+        </Background>
+      </Route>
+      <Route exact path='/swaps'>
+        <Background>
+          <PageContainer>
+            <AppHeader title='DEX' appState={appState} pageId={1}/>
+            <TokenPicker 
+            appState={appState} 
+            dexContract={dexContract} 
+            handleBaseTokenChange={handleBaseTokenChange}
+            handlePairedTokenChange={handlePairedTokenChange}/>
+            <DexData appState={appState} dexContract={dexContract}/>
+            <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
+          </PageContainer>
+        </Background>
+      </Route>
+      <Route exact path='/feed'>
+        <Background>
+          <PageContainer>
+            <AppHeader title='DEX' appState={appState} pageId={2}/>
+            
+            <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
+          </PageContainer>
+        </Background>
+      </Route>
+    </Router>
   )
 }
 
 export default App;
+
