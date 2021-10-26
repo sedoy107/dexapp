@@ -8,7 +8,7 @@ import '@fortawesome/fontawesome-free/js/all'
 // App components
 import AppHeader from './components/AppHeader'
 import TokenPicker from './components/TokenPicker'
-import DexData from './components/DexData'
+import SwapPanel from './components/SwapPanel'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
 // Config
@@ -19,21 +19,21 @@ import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
 
+declare const window: any;
+
 // Default app state
 export interface IToken {
   ticker: string,
   symbol: string,
 }
 export interface IAppState {
-  accounts: string[],
   tokens: IToken[],
   pairedTokenSet: IToken[],
   blockNumber: number,
-  baseToken: IToken | null,
-  pairedToken: IToken | null,
+  baseToken: IToken | any,
+  pairedToken: IToken | any,
 }
 const defaultAppState = {
-  accounts: [],
   tokens: [],
   pairedTokenSet: [],
   blockNumber: 0,
@@ -41,17 +41,23 @@ const defaultAppState = {
   pairedToken: null,
 }
 
+export interface IMetamask {
+  provider: object | null,
+  chainId: number | null,
+  currentAccount: string | null
+}
+const defaultMetamaskState = {
+  provider: null,
+  chainId: null,
+  currentAccount: null
+}
+
 // IRpcProvider
 export interface IRpcProvider {
   provider: Web3,
   netId: number,
+  chainId: number,
   blockHeadSubscription: Subscription<BlockHeader>,
-}
-
-// IMetamaskProvider
-export interface IMetamaskProvider {
-  provider: object,
-  netId: number
 }
 
 // IPage
@@ -75,9 +81,92 @@ const Background = styled.div`
 function App() {
   // States
   const [rpcProvider, setRpcProvider] = useState<IRpcProvider | null>(null)
-  const [metamaskProvider, setMetamaskProvider] = useState<IMetamaskProvider | null>(null)
+  const [metamask, setMetamask] = useState<IMetamask>(defaultMetamaskState)
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
+
+  const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
+
+    const ethereum = window.ethereum
+
+    // Check if Metamask is not installed
+    if (typeof ethereum === 'undefined') {
+      setMetamask(() => (defaultMetamaskState))
+      return false
+    }
+
+    const makeNewState = async () => {
+      const chainId = isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_chainId' }) : ethereum.chainId
+      const accounts = isInitialConnect|| !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
+      const currentAccount = accounts.length === 0 ? null : accounts[0]
+      setMetamask(() => {
+        return {
+          provider: ethereum,
+          chainId: chainId,
+          currentAccount: currentAccount
+        }
+      })
+    }
+
+    // Note that this event is emitted on page load.
+    // If the array of accounts is non-empty, you're already
+    // connected.
+    ethereum.on('accountsChanged', (newAccounts: string[]) => {
+      setMetamask((prevMetamask: IMetamask) => {
+        return {
+          ...prevMetamask,
+          currentAccount: newAccounts.length === 0 ? null : newAccounts[0]
+        }
+      })
+    });
+
+    // Subscribe for events only when the application loads for the first time
+    ethereum.on('chainChanged', (newChainId: number) => {
+      setMetamask((prevMetamask: IMetamask) => {
+        return {
+          ...prevMetamask,
+          chainId: newChainId
+        }
+      })
+    })
+
+    // ethereum.on('disconnect', () => {
+    //   console.log("On Disconnect");
+    //   setMetamask(() => defaultMetamaskState)
+    // })
+
+    // ethereum.on('connect', () => {
+    //   console.log("On Connect");
+    //   makeNewState()
+    // })
+
+    makeNewState()
+
+    return true
+  }, [])
+
+  /**
+   * @dev Initialize Metamask on page load
+   * 
+   * Side effect depends on: window.ethereum
+   *  
+   * Cleanup: ?
+   * */ 
+  useEffect(() => {
+    /**
+     * @dev React component lifecycle alias
+     * */
+     const componentWillMount = async () => {
+      const bRes = await connectMetamask(false)
+      console.log(bRes ? '[connectMetamask] - Success' : '[connectMetamask]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+    componentWillMount()
+  }, [connectMetamask])
+
 
   /**
    * @dev Initialize Network
@@ -97,6 +186,8 @@ function App() {
       // Connect to the primary network via WebSocket RPC provider
       const rpcProvider = new Web3(defaultWeb3Network.url)
       const netId = await rpcProvider.eth.net.getId()
+      const chainId = await rpcProvider.eth.getChainId()
+
       // Subscribe for newBlockHeaders events to track block updates
       const subscription = rpcProvider.eth.subscribe('newBlockHeaders', (error, result) => {
         if (!error) {
@@ -117,6 +208,7 @@ function App() {
       setRpcProvider((prevState) => ({
         provider: rpcProvider, 
         netId: netId,
+        chainId: chainId,
         blockHeadSubscription: subscription,
       }))
 
@@ -183,15 +275,6 @@ function App() {
       const abi = dexBuildObject.abi;
       const dexContract = await new rpcProvider.provider.eth.Contract(abi, address)
       
-      /**
-       * @TODO
-       * subscribe for Dex events: OrderCreated, OrderFilled, OrderRemoved
-       * 
-       * ^ this needs to be done when the wallet is connected 
-       * 
-       * Use tx hash:
-       * const txHash = dexBuildObject.networks[rpcProvider.netId].transactionHash
-       */
       setDexContract(() => dexContract)
 
       return true
@@ -334,6 +417,7 @@ function App() {
     //useEffect cleanup:
     // return the cleanup callback
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState.baseToken])
 
   const handleBaseTokenChange = (newBaseToken) => {
@@ -363,7 +447,7 @@ function App() {
       <Route exact path='/welcome'>
         <Background>
           <PageContainer>
-            <AppHeader title='DEX' appState={appState} pageId={0}/>
+            <AppHeader title='DEX' appState={appState} pageId={0} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             <Welcome />
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={true}/>
           </PageContainer>
@@ -372,13 +456,13 @@ function App() {
       <Route exact path='/swaps'>
         <Background>
           <PageContainer>
-            <AppHeader title='DEX' appState={appState} pageId={1}/>
+            <AppHeader title='DEX' appState={appState} pageId={1} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             <TokenPicker 
             appState={appState} 
             dexContract={dexContract} 
             handleBaseTokenChange={handleBaseTokenChange}
             handlePairedTokenChange={handlePairedTokenChange}/>
-            <DexData appState={appState} dexContract={dexContract}/>
+            <SwapPanel appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>
@@ -386,7 +470,7 @@ function App() {
       <Route exact path='/feed'>
         <Background>
           <PageContainer>
-            <AppHeader title='DEX' appState={appState} pageId={2}/>
+            <AppHeader title='DEX' appState={appState} pageId={2} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
