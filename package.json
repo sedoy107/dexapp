@@ -16,6 +16,7 @@
     "@usedapp/core": "^0.5.4",
     "bootstrap": "^5.1.1",
     "bootswatch": "^5.1.2",
+    "jazzicon": "^1.5.0",
     "react": "^17.0.2",
     "react-bootstrap": "^2.0.0-rc.0",
     "react-dom": "^17.0.2",
