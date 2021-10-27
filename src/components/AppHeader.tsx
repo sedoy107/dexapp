@@ -6,8 +6,6 @@
  * Design:The header must be transparent so that the background can be seen through.
  * 
  * */ 
-import '../App.css'
-
 import logo from '../logo.svg'
 import styled from 'styled-components'
 import { Button } from 'react-bootstrap'
@@ -104,7 +102,7 @@ function ConnectButton(props) {
         {<Jazzicon diameter={24} seed={jsNumberForAddress(props.metamask.currentAccount)} />} 
         <label style={{ marginLeft : '5px' }}>{props.metamask.currentAccount.slice(0,6) + '...' + props.metamask.currentAccount.slice(-4)}</label>
         </JazzTitle>
-      variant = 'success'
+      variant = 'primary'
     }
     else {
       // Connect Wallet

@@ -81,6 +81,10 @@ export default function TokenPicker(props) {
         )
     })
 
+    const handleSwapTokenButtonClick = (e) => {
+        props.showSwapModal()
+    }
+
     return (
         <MAIN_DIV>
         <TOKEN_DIV>
@@ -93,7 +97,12 @@ export default function TokenPicker(props) {
             </Dropdown.Menu>
             </Dropdown>
 
-            <SwapTokenButton variant="primary" hidden={isDisabled}><i className="fas fa-sync-alt"></i></SwapTokenButton>{' '}
+            <SwapTokenButton 
+            variant="primary" 
+            hidden={isDisabled}
+            onClick={handleSwapTokenButtonClick}>
+                <i className="fas fa-sync-alt"></i>
+            </SwapTokenButton>{' '}
 
             <Dropdown>
             <PairedTokenDropdownToggle variant="primary" disabled={isDisabled}>

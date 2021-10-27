@@ -11,6 +11,7 @@ import TokenPicker from './components/TokenPicker'
 import SwapPanel from './components/SwapPanel'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
+import SwapModal from './components/SwapModal'
 // Config
 import { defaultWeb3Network } from './config/config'
 // Web3 imports
@@ -84,6 +85,8 @@ function App() {
   const [metamask, setMetamask] = useState<IMetamask>(defaultMetamaskState)
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
+  // Swap Modal state
+  const [swapModalShow, setSwapModalShow] = useState(false);
 
   const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
 
@@ -461,7 +464,9 @@ function App() {
             appState={appState} 
             dexContract={dexContract} 
             handleBaseTokenChange={handleBaseTokenChange}
-            handlePairedTokenChange={handlePairedTokenChange}/>
+            handlePairedTokenChange={handlePairedTokenChange}
+            showSwapModal={() => setSwapModalShow(true)}/>
+            <SwapModal show={swapModalShow} onHide={() => setSwapModalShow(false)}></SwapModal>
             <SwapPanel appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
