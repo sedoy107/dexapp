@@ -46,7 +46,11 @@ export default function TokenPicker(props) {
     const currentBaseTokenDisplayName = props.appState.baseToken ? props.appState.baseToken.symbol: ''
 
     const handleBaseTokenItemClick = (e) => {
-        props.handleBaseTokenChange( {ticker: e.currentTarget.dataset.ticker, symbol: e.currentTarget.dataset.symbol} )
+        props.handleBaseTokenChange( {
+            ticker: e.currentTarget.dataset.ticker, 
+            symbol: e.currentTarget.dataset.symbol, 
+            address: e.currentTarget.dataset.address
+        })
     }
 
     const baseTokenMenuItems = props.appState.tokens.map((token) => {
@@ -55,7 +59,8 @@ export default function TokenPicker(props) {
             key={token.ticker} 
             onClick={handleBaseTokenItemClick} 
             data-ticker={token.ticker} 
-            data-symbol={token.symbol}>
+            data-symbol={token.symbol}
+            data-address={token.address}>
                 {token.symbol}
             </Dropdown.Item>
         )
@@ -66,7 +71,11 @@ export default function TokenPicker(props) {
     const isDisabled = props.appState.pairedToken ? false: true
 
     const handlePairedTokenItemClick = (e) => {
-        props.handlePairedTokenChange( {ticker: e.currentTarget.dataset.ticker, symbol: e.currentTarget.dataset.symbol} )
+        props.handlePairedTokenChange( {
+            ticker: e.currentTarget.dataset.ticker, 
+            symbol: e.currentTarget.dataset.symbol, 
+            address: e.currentTarget.dataset.address
+        })
     }
 
     const pairedTokenMenuItems = props.appState.pairedTokenSet.map((token) => {
@@ -75,7 +84,8 @@ export default function TokenPicker(props) {
             key={token.ticker} 
             onClick={handlePairedTokenItemClick}
             data-ticker={token.ticker} 
-            data-symbol={token.symbol}>
+            data-symbol={token.symbol}
+            data-address={token.address}>
                 {token.symbol}
             </Dropdown.Item>
         )

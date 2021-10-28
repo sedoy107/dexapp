@@ -24,6 +24,7 @@ declare const window: any;
 
 // Default app state
 export interface IToken {
+  address: string,
   ticker: string,
   symbol: string,
 }
@@ -319,9 +320,15 @@ function App() {
 
       // Aux function to get tokens from the contract 
       const getTokens = async (contract: Contract) => {
-        const ethTicker = '0x4554480000000000000000000000000000000000000000000000000000000000'
+        const ethToken = {
+          address: '0x0000000000000000000000000000000000000000',
+          ticker: '0x4554480000000000000000000000000000000000000000000000000000000000'
+        }
         const tokens = await contract.methods.getTokenList().call()
-        return [ethTicker].concat([...tokens].sort().filter((i,p,a) => {return !p || i !== a[p - 1]}))
+        return [ethToken].concat([...tokens]
+          .sort((a,b) => (a.ticker > b.ticker ? 1 : -1))
+          .filter((i,p,a) => {return !p || i.ticker !== a[p - 1].ticker})
+          .map((token) => ({address: token.tokenAddress, ticker: token.ticker})))
       }
       
       // Check if any of the required states aren't ready yet
@@ -334,7 +341,7 @@ function App() {
 
       // Get token list from the contract
       const tokens = await getTokens(dexContract)
-      const tokensWithSymbols = tokens.map((t) => ({ticker:t, symbol:Web3.utils.toAscii(t)}))
+      const tokensWithSymbols = tokens.map((t) => ({address: t.address, ticker:t.ticker, symbol:Web3.utils.toAscii(t.ticker)}))
 
       setAppState((prevState) => ({
         ...prevState,

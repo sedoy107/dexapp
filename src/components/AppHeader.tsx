@@ -8,7 +8,7 @@
  * */ 
 import logo from '../logo.svg'
 import styled from 'styled-components'
-import { Button } from 'react-bootstrap'
+import { Button, Spinner } from 'react-bootstrap'
 import { useCallback, useEffect, useState } from 'react'
 
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
@@ -69,7 +69,7 @@ const JazzTitle = styled.span`
 function ConnectButton(props) {
 
   interface IConnectButtonState {
-    title: string,
+    title: any,
     variant: string
     pending: boolean
   }
@@ -81,8 +81,8 @@ function ConnectButton(props) {
 
     if(!props.metamask.provider || !props.rpcProvider) {
       return {
-        title: '',
-        variant: 'secondary',
+        title: <Spinner animation="border" variant='secondary' size='sm' />,
+        variant: 'warning',
         pending: false
       }
     }
@@ -127,7 +127,7 @@ function ConnectButton(props) {
         setButtonState((prevState) => {
           return {
             ...prevState,
-            title: 'Connecting...',
+            title: <Spinner animation="border" variant='secondary' size='sm'/>,
             pending: true
           }
         })

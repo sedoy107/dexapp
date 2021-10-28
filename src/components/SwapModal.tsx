@@ -6,7 +6,7 @@ import './SwapModal.css'
 
 export default function SwapModal(props) {
     return (
-      <Modal {...props} aria-labelledby="contained-modal-title-vcenter" centered contentClassName='SwapModalTransparent'>
+      <Modal {...props} aria-labelledby="contained-modal-title-vcenter" centered contentClassName='SwapModalTransparent' animation={false}>
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
             Create Order
