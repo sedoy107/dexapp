@@ -1,15 +1,9 @@
-// Logo
-// Page control
-// Wallet connection
+import Web3 from 'web3'
 
-/** 
- * Design:The header must be transparent so that the background can be seen through.
- * 
- * */ 
 import logo from '../logo.svg'
 import styled from 'styled-components'
 import { Button, Spinner } from 'react-bootstrap'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 
@@ -52,7 +46,7 @@ const Logo = styled.div`
   align-items: center;
   justify-content: flex-start;
   color: white;
-  width: 200px;
+  width: 280px;
 `
 
 const PageButton = styled(Button)`
@@ -64,6 +58,23 @@ const JazzTitle = styled.span`
   flex-direction: row;
   align-items: center;
   justify-content: center;
+`
+
+const BalanceButtonBlock = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: .25rem;
+  font-weight: bold;
+  color: #999;
+  width: 280px;
+`
+const BalanceBlock = styled.div`
+  width: 80px;
+  display: flex:
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `
 
 function ConnectButton(props) {
@@ -146,7 +157,7 @@ function ConnectButton(props) {
   
   return (
     <Button
-      style={{ width: "200px" }}
+      style={{ width: "200px", marginRight: '0px' }}
       variant={buttonState.variant} 
       hidden={props.pageId === 0}
       disabled={buttonState.pending}
@@ -169,6 +180,24 @@ export default function AppHeader(props) {
     document.location.href = href;
   }
 
+  const balance = parseInt(props.metamask.balance) / 10 ** 18
+  let balanceString = 'ETH: '
+  let balanceBackground = 'rgba(0,0,0,0.6)'
+  if (balance > 0 && balance < 1) {
+    balanceString += '<1'
+  } 
+  else if (balance > 99) {
+    balanceString += '99+'
+  }
+  else {
+    balanceString += Math.floor(balance)
+  } 
+  
+  if (!props.metamask.currentAccount) {
+    balanceString = ''
+    balanceBackground = 'rgba(0,0,0,0.0)'
+  }
+
   return (
     <Header>
       <Logo>
@@ -182,7 +211,10 @@ export default function AppHeader(props) {
         onClick={(e) => handlePageButtonClick(e, hrefOptions[props.pageId].href)}>
           {hrefOptions[props.pageId].title}
       </PageButton>
-      <ConnectButton pageId={props.pageId} metamask={props.metamask} rpcProvider={props.rpcProvider} connectMetamask={props.connectMetamask}/>
+      <BalanceButtonBlock style={{backgroundColor: balanceBackground}}>
+        <BalanceBlock>{balanceString}</BalanceBlock>
+        <ConnectButton pageId={props.pageId} metamask={props.metamask} rpcProvider={props.rpcProvider} connectMetamask={props.connectMetamask}/>
+      </BalanceButtonBlock>
     </Header>
   )
 }

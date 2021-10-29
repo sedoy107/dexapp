@@ -2,7 +2,16 @@ import styled from 'styled-components'
 import React, {useState, useEffect} from 'react'
 
 // Generic styles for the page
+const GrandParentContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+`
+
 const ParentContainer = styled.div`
+    width: 1200px;
+    min-width: 1000px;
 `
 const RowPanelBase = styled.div`
     display: flex;
@@ -72,9 +81,10 @@ function Orders() {
     )
 }
 
-export default function SwapPanel(props) {
+export default function DexTradeInfo(props) {
 
     return (
+        <GrandParentContainer>
         <ParentContainer>
             <RowPanelBase>
                 <Chart />
@@ -84,5 +94,6 @@ export default function SwapPanel(props) {
                 <Orders />
             </RowPanelBase>
         </ParentContainer>
+        </GrandParentContainer>
     )
 }

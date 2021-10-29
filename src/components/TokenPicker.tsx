@@ -9,11 +9,6 @@ const MAIN_DIV = styled.div`
     justify-content: flex-start;
 `
 
-const PRICE_P = styled.p`
-    font-weight: bold;
-    color: #4bff52;
-    font-size: 0.9rem;
-`
 const TOKEN_DIV = styled.div`
     display:flex;
     flex-direction: row;
@@ -95,6 +90,12 @@ export default function TokenPicker(props) {
         props.showSwapModal()
     }
 
+    // Pair label
+    const pairLabelValue = props.appState.pairedToken 
+    ? props.appState.baseToken.symbol+'/'+props.appState.pairedToken.symbol
+    : 'No Trading Pair'
+    const pairLabelColor = props.appState.pairedToken ? '#4bff52' : 'grey'
+
     return (
         <MAIN_DIV>
         <TOKEN_DIV>
@@ -123,7 +124,7 @@ export default function TokenPicker(props) {
             </Dropdown.Menu>
             </Dropdown>
         </TOKEN_DIV>
-            <PRICE_P>$2,522.34</PRICE_P>
+            <p style={{fontSize: '0.9rem', fontWeight: 'bold', color: pairLabelColor}}>{pairLabelValue}</p>
         </MAIN_DIV>
     )
 }

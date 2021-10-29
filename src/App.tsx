@@ -8,7 +8,7 @@ import '@fortawesome/fontawesome-free/js/all'
 // App components
 import AppHeader from './components/AppHeader'
 import TokenPicker from './components/TokenPicker'
-import SwapPanel from './components/SwapPanel'
+import DexTradeInfo from './components/DexTradeInfo'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
 import SwapModal from './components/SwapModal'
@@ -46,12 +46,15 @@ const defaultAppState = {
 export interface IMetamask {
   provider: object | null,
   chainId: number | null,
-  currentAccount: string | null
+  currentAccount: string | null,
+  balance: string
 }
+
 const defaultMetamaskState = {
   provider: null,
   chainId: null,
-  currentAccount: null
+  currentAccount: null,
+  balance: '0'
 }
 
 // IRpcProvider
@@ -100,14 +103,18 @@ function App() {
     }
 
     const makeNewState = async () => {
+      // Initialize metamask rpc provider
+      const metamaskRpcProvider = new Web3(ethereum)
       const chainId = isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_chainId' }) : ethereum.chainId
       const accounts = isInitialConnect|| !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
       const currentAccount = accounts.length === 0 ? null : accounts[0]
-      setMetamask(() => {
+      const balance = currentAccount === null ? '0' : await metamaskRpcProvider.eth.getBalance(currentAccount)
+      setMetamask(() : IMetamask => {
         return {
           provider: ethereum,
           chainId: chainId,
-          currentAccount: currentAccount
+          currentAccount: currentAccount,
+          balance: balance
         }
       })
     }
@@ -116,33 +123,13 @@ function App() {
     // If the array of accounts is non-empty, you're already
     // connected.
     ethereum.on('accountsChanged', (newAccounts: string[]) => {
-      setMetamask((prevMetamask: IMetamask) => {
-        return {
-          ...prevMetamask,
-          currentAccount: newAccounts.length === 0 ? null : newAccounts[0]
-        }
-      })
+      makeNewState()
     });
 
     // Subscribe for events only when the application loads for the first time
     ethereum.on('chainChanged', (newChainId: number) => {
-      setMetamask((prevMetamask: IMetamask) => {
-        return {
-          ...prevMetamask,
-          chainId: newChainId
-        }
-      })
+      makeNewState()
     })
-
-    // ethereum.on('disconnect', () => {
-    //   console.log("On Disconnect");
-    //   setMetamask(() => defaultMetamaskState)
-    // })
-
-    // ethereum.on('connect', () => {
-    //   console.log("On Connect");
-    //   makeNewState()
-    // })
 
     makeNewState()
 
@@ -397,9 +384,9 @@ function App() {
       })
       await Promise.all(pairPromises)
       .then((pairs) => {
-          const pairedTokenSet = pairs.filter((item,pos,arr) => (item.isValid === true)).map((token) => ({ticker: token.ticker, symbol: token.symbol}))
+          const pairedTokenSet = pairs.filter((item,pos,arr) => (item.isValid === true)).map((token) : IToken => ({address: token.address, ticker: token.ticker, symbol: token.symbol}))
           const pairedToken = pairedTokenSet.length > 0 ? pairedTokenSet[0] : null
-          setAppState((prevState) => {
+          setAppState((prevState) : IAppState => {
             return {
               ...prevState,
               pairedTokenSet: pairedTokenSet,
@@ -474,7 +461,7 @@ function App() {
             handlePairedTokenChange={handlePairedTokenChange}
             showSwapModal={() => setSwapModalShow(true)}/>
             <SwapModal show={swapModalShow} onHide={() => setSwapModalShow(false)}></SwapModal>
-            <SwapPanel appState={appState} dexContract={dexContract}/>
+            <DexTradeInfo appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>
