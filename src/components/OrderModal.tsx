@@ -2,11 +2,11 @@ import styled from 'styled-components'
 import { Modal, Container, Row, Col, Button } from 'react-bootstrap'
 import { useCallback, useEffect, useState } from 'react'
 
-import './SwapModal.css'
+import './OrderModal.css'
 
-export default function SwapModal(props) {
+export default function OrderModal(props) {
     return (
-      <Modal {...props} aria-labelledby="contained-modal-title-vcenter" centered contentClassName='SwapModalTransparent' animation={false}>
+      <Modal {...props} aria-labelledby="contained-modal-title-vcenter" centered contentClassName='OrderModalTransparent' animation={false}>
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
             Create Order

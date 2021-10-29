@@ -11,7 +11,7 @@ import TokenPicker from './components/TokenPicker'
 import DexTradeInfo from './components/DexTradeInfo'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
-import SwapModal from './components/SwapModal'
+import OrderModal from './components/OrderModal'
 // Config
 import { defaultWeb3Network } from './config/config'
 // Web3 imports
@@ -90,7 +90,7 @@ function App() {
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
   // Swap Modal state
-  const [swapModalShow, setSwapModalShow] = useState(false);
+  const [orderModalShow, setOrderModalShow] = useState(false);
 
   const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
 
@@ -450,7 +450,7 @@ function App() {
           </PageContainer>
         </Background>
       </Route>
-      <Route exact path='/swaps'>
+      <Route exact path='/trade'>
         <Background>
           <PageContainer>
             <AppHeader title='DEX' appState={appState} pageId={1} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
@@ -459,8 +459,8 @@ function App() {
             dexContract={dexContract} 
             handleBaseTokenChange={handleBaseTokenChange}
             handlePairedTokenChange={handlePairedTokenChange}
-            showSwapModal={() => setSwapModalShow(true)}/>
-            <SwapModal show={swapModalShow} onHide={() => setSwapModalShow(false)}></SwapModal>
+            showOrderModal={() => setOrderModalShow(true)}/>
+            <OrderModal show={orderModalShow} onHide={() => setOrderModalShow(false)}></OrderModal>
             <DexTradeInfo appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
