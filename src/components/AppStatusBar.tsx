@@ -14,9 +14,8 @@ const FOOTER = styled.div`
 export default function AppStatusBar(props) {
 
     const blockNumberString = 'Last synched block: ' + props.appState.blockNumber
-    const statusBarString = props.rpcProvider 
-    ? 'Connected to: ' + web3Networks[props.rpcProvider.netId].name
-    : 'Not connected'
+    const networkConfig = props.rpcProvider ? web3Networks.find((network) => (network.chainId === props.rpcProvider.chainId)) : undefined
+    const statusBarString = networkConfig !== undefined ? 'Connected to: ' + networkConfig.name : 'Not connected'
 
     return (
         <FOOTER hidden={props.hidden}>

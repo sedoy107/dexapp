@@ -102,7 +102,7 @@ function ConnectButton(props) {
     let variant;
     
     // eslint-disable-next-line eqeqeq
-    if (props.metamask.provider.networkVersion != props.rpcProvider.netId) {
+    if (props.metamask.provider.chainId != props.rpcProvider.chainId) {
       // Wrong network
       title = 'Wrong Network'
       variant = 'danger'

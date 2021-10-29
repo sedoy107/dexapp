@@ -11,7 +11,7 @@ import TokenPicker from './components/TokenPicker'
 import DexTradeInfo from './components/DexTradeInfo'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
-import OrderModal from './components/OrderModal'
+import { OrderModal } from './components/Modals'
 // Config
 import { defaultWeb3Network } from './config/config'
 // Web3 imports
@@ -34,6 +34,7 @@ export interface IAppState {
   blockNumber: number,
   baseToken: IToken | any,
   pairedToken: IToken | any,
+  tradeEnabled: boolean
 }
 const defaultAppState = {
   tokens: [],
@@ -41,6 +42,7 @@ const defaultAppState = {
   blockNumber: 0,
   baseToken: null,
   pairedToken: null,
+  tradeEnabled: false
 }
 
 export interface IMetamask {
@@ -89,7 +91,6 @@ function App() {
   const [metamask, setMetamask] = useState<IMetamask>(defaultMetamaskState)
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
-  // Swap Modal state
   const [orderModalShow, setOrderModalShow] = useState(false);
 
   const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
@@ -115,6 +116,13 @@ function App() {
           chainId: chainId,
           currentAccount: currentAccount,
           balance: balance
+        }
+      })
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          // eslint-disable-next-line eqeqeq
+          tradeEnabled: chainId == defaultWeb3Network.chainId
         }
       })
     }
@@ -177,7 +185,7 @@ function App() {
       // Connect to the primary network via WebSocket RPC provider
       const rpcProvider = new Web3(defaultWeb3Network.url)
       const netId = await rpcProvider.eth.net.getId()
-      const chainId = await rpcProvider.eth.getChainId()
+      const chainId = netId === defaultWeb3Network.netId ? defaultWeb3Network.chainId : await rpcProvider.eth.getChainId()
 
       // Subscribe for newBlockHeaders events to track block updates
       const subscription = rpcProvider.eth.subscribe('newBlockHeaders', (error, result) => {
@@ -455,12 +463,18 @@ function App() {
           <PageContainer>
             <AppHeader title='DEX' appState={appState} pageId={1} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             <TokenPicker 
-            appState={appState} 
-            dexContract={dexContract} 
-            handleBaseTokenChange={handleBaseTokenChange}
-            handlePairedTokenChange={handlePairedTokenChange}
-            showOrderModal={() => setOrderModalShow(true)}/>
-            <OrderModal show={orderModalShow} onHide={() => setOrderModalShow(false)}></OrderModal>
+              appState={appState} 
+              dexContract={dexContract} 
+              handleBaseTokenChange={handleBaseTokenChange}
+              handlePairedTokenChange={handlePairedTokenChange}
+              showOrderModal={() => setOrderModalShow(true)}
+            />
+            <OrderModal 
+              show={orderModalShow} 
+              onHide={() => setOrderModalShow(false)} 
+              metamask={metamask} 
+              appstate={appState} 
+            />
             <DexTradeInfo appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>

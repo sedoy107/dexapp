@@ -1,6 +1,7 @@
 import styled from 'styled-components'
-import React, {useState, useEffect} from 'react'
-import { Dropdown, Button } from 'react-bootstrap';
+import { Dropdown, Button, Modal } from 'react-bootstrap'
+import React, {useState, useEffect, useCallback} from 'react'
+import { WrongNetworkModal } from './Modals'
 
 const MAIN_DIV = styled.div`
     display:flex;
@@ -30,12 +31,18 @@ const PairedTokenDropdownToggle = styled(Dropdown.Toggle)`
     border-bottom-left-radius: 0%;
     min-width: 100px;
 `
-const SwapTokenButton = styled(Button)`
+const TradeTokensButton = styled(Button)`
     border-radius: 0%; 
     margin: 10px, 0px, 10px, 0px;
 `
 
 export default function TokenPicker(props) {
+
+    // WrongNetworkModal handling
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+  
     
     // Base Token
     const currentBaseTokenDisplayName = props.appState.baseToken ? props.appState.baseToken.symbol: ''
@@ -86,8 +93,8 @@ export default function TokenPicker(props) {
         )
     })
 
-    const handleSwapTokenButtonClick = (e) => {
-        props.showSwapModal()
+    const handleTradeTokensButtonClick = (e) => {
+        props.appState.tradeEnabled ? props.showOrderModal() : handleShow()
     }
 
     // Pair label
@@ -108,12 +115,12 @@ export default function TokenPicker(props) {
             </Dropdown.Menu>
             </Dropdown>
 
-            <SwapTokenButton 
+            <TradeTokensButton 
             variant="primary" 
             hidden={isDisabled}
-            onClick={handleSwapTokenButtonClick}>
+            onClick={handleTradeTokensButtonClick}>
                 <i className="fas fa-sync-alt"></i>
-            </SwapTokenButton>{' '}
+            </TradeTokensButton>{' '}
 
             <Dropdown>
             <PairedTokenDropdownToggle variant="primary" disabled={isDisabled}>
@@ -125,6 +132,7 @@ export default function TokenPicker(props) {
             </Dropdown>
         </TOKEN_DIV>
             <p style={{fontSize: '0.9rem', fontWeight: 'bold', color: pairLabelColor}}>{pairLabelValue}</p>
+            <WrongNetworkModal show={show} handleShow={handleShow} handleClose={handleClose} />
         </MAIN_DIV>
     )
 }
