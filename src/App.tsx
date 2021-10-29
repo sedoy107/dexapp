@@ -103,11 +103,11 @@ function App() {
       return false
     }
 
-    const makeNewState = async () => {
+    const makeNewState = async (_isInitialConnect : boolean) => {
       // Initialize metamask rpc provider
       const metamaskRpcProvider = new Web3(ethereum)
-      const chainId = isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_chainId' }) : ethereum.chainId
-      const accounts = isInitialConnect|| !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
+      const chainId = _isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_chainId' }) : ethereum.chainId
+      const accounts = _isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
       const currentAccount = accounts.length === 0 ? null : accounts[0]
       const balance = currentAccount === null ? '0' : await metamaskRpcProvider.eth.getBalance(currentAccount)
       setMetamask(() : IMetamask => {
@@ -122,7 +122,7 @@ function App() {
         return {
           ...prevState,
           // eslint-disable-next-line eqeqeq
-          tradeEnabled: chainId == defaultWeb3Network.chainId
+          tradeEnabled: chainId == defaultWeb3Network.chainId && currentAccount !== null
         }
       })
     }
@@ -131,15 +131,15 @@ function App() {
     // If the array of accounts is non-empty, you're already
     // connected.
     ethereum.on('accountsChanged', (newAccounts: string[]) => {
-      makeNewState()
+      makeNewState(false)
     });
 
     // Subscribe for events only when the application loads for the first time
     ethereum.on('chainChanged', (newChainId: number) => {
-      makeNewState()
+      makeNewState(false)
     })
 
-    makeNewState()
+    makeNewState(isInitialConnect)
 
     return true
   }, [])
