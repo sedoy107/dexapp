@@ -40,7 +40,7 @@ const Title = styled.p`
 const ChartDiv = styled(ColumnPanel)`
     margin-right: 5px;
 `
-function Chart() {
+function Chart(props) {
     return (
         <ChartDiv><Title>Chart</Title></ChartDiv>
     )
@@ -50,7 +50,8 @@ function Chart() {
 const OrderbookDiv = styled(ColumnPanel)`
     margin-left: 5px;
 `
-function Orderbook() {
+
+function Orderbook(props) {
     return (
         <OrderbookDiv><Title>Orderbook</Title></OrderbookDiv>
     )
@@ -70,7 +71,7 @@ const TabButton = styled.button`
 const OrdersDiv = styled(RowPanel)`
     width: 100%;
 `
-function Orders() {
+function Orders(props) {
     return (
         <OrdersDiv>
             <OrderTabs>
@@ -87,11 +88,11 @@ export default function DexTradeInfo(props) {
         <GrandParentContainer>
         <ParentContainer>
             <RowPanelBase>
-                <Chart />
-                <Orderbook />
+                <Chart appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
+                <Orderbook appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
             </RowPanelBase>
             <RowPanelBase>
-                <Orders />
+                <Orders appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
             </RowPanelBase>
         </ParentContainer>
         </GrandParentContainer>

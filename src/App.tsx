@@ -20,6 +20,8 @@ import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
 
+const ERC20_ABI = require('../src/artifacts/ERC20.json')
+
 declare const window: any;
 
 // Default app state
@@ -27,6 +29,7 @@ export interface IToken {
   address: string,
   ticker: string,
   symbol: string,
+  decimals: number
 }
 export interface IAppState {
   tokens: IToken[],
@@ -73,6 +76,41 @@ export interface IPage {
   title: string
 }
 
+// IOrderbookItem
+export interface IOrderBookItem {
+  price: number,
+  amount: number
+}
+
+// IOrderbook
+export interface IOrderBook {
+  buy: IOrderBookItem[],
+  sell: IOrderBookItem[]
+}
+
+// IOrderRaw
+export interface IOrderRaw {
+  id: number,
+  trader: string,
+  side: number, 
+  orderType: number,
+  tickerTo: string, 
+  tickerFrom: string, 
+  price: number, 
+  amount: number
+}
+
+export interface IOrder {
+  id: number,
+  trader: string,
+  side: number,
+  orderType: number,
+  baseToken: IToken,
+  pairedToken: IToken,
+  price: number,
+  amount: number
+}
+
 // Styles
 const PageContainer = styled.div`
   margin: 0px 10px 0px 10px;
@@ -91,7 +129,8 @@ function App() {
   const [metamask, setMetamask] = useState<IMetamask>(defaultMetamaskState)
   const [dexContract, setDexContract] = useState<Contract | null>(null)
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
-  const [orderModalShow, setOrderModalShow] = useState(false);
+  const [orderModalShow, setOrderModalShow] = useState(false)
+  const [orderBook, setOrderBook] = useState<IOrderBook>({buy: [], sell: []})
 
   const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
 
@@ -136,7 +175,8 @@ function App() {
 
     // Subscribe for events only when the application loads for the first time
     ethereum.on('chainChanged', (newChainId: number) => {
-      makeNewState(false)
+      //makeNewState(false)
+      window.location.reload()
     })
 
     makeNewState(isInitialConnect)
@@ -166,6 +206,54 @@ function App() {
     componentWillMount()
   }, [connectMetamask])
 
+  const getOrderBook = useCallback (() => {
+
+    if(!appState.pairedToken || !dexContract) {
+      return
+    }
+
+    console.log("Update getOrderBook callback");
+
+    const BUY = 0
+    const SELL = 1
+
+    dexContract.methods.getOrderBook(BUY, appState.baseToken.ticker, appState.pairedToken.ticker).call()
+    .then(orderbook => {
+      setOrderBook((prevOrderBook) => {
+        return {
+          ...prevOrderBook,
+          buy: orderbook.map((order) => ({price: order.price, amount: order.amount}))
+        }
+      })
+    })
+    .catch(err => {
+        console.error(err);
+    })
+
+    dexContract.methods.getOrderBook(SELL, appState.baseToken.ticker, appState.pairedToken.ticker).call()
+    .then(orderbook => {
+      setOrderBook((prevOrderBook) => {
+        return {
+          ...prevOrderBook,
+          sell: orderbook.map((order) => ({price: order.price, amount: order.amount}))
+        }
+      })
+    })
+    .catch(err => {
+        console.error(err);
+    })
+
+  }, [dexContract, appState.pairedToken])
+
+  const getChartData = useCallback (() => {
+
+    if(!appState.baseToken) {
+      return
+    }
+
+    console.log("Placeholder for fetching chart data");
+
+  }, [appState.pairedToken])
 
   /**
    * @dev Initialize Network
@@ -201,6 +289,7 @@ function App() {
       .on("data", function(blockHeader){
           console.log(blockHeader);
           setAppState((prevState) => ({...prevState, blockNumber: blockHeader.number}))
+          getOrderBook()
       })
       .on("error", console.error);
   
@@ -272,7 +361,7 @@ function App() {
       // Initialize Dex contract from address and abi
       const address = dexBuildObject.networks[rpcProvider.netId].address
       const abi = dexBuildObject.abi;
-      const dexContract = await new rpcProvider.provider.eth.Contract(abi, address)
+      const dexContract = new rpcProvider.provider.eth.Contract(abi, address)
       
       setDexContract(() => dexContract)
 
@@ -306,6 +395,8 @@ function App() {
    * */ 
   useEffect (() => {
 
+    
+
     /**
      * - Initialize smart contract
      * - Subscribe for smart contract events
@@ -336,14 +427,36 @@ function App() {
 
       // Get token list from the contract
       const tokens = await getTokens(dexContract)
-      const tokensWithSymbols = tokens.map((t) => ({address: t.address, ticker:t.ticker, symbol:Web3.utils.toAscii(t.ticker)}))
+      //const tokensWithSymbols = tokens.map((t) => ({address: t.address, ticker:t.ticker, symbol:Web3.utils.toAscii(t.ticker)}))
+      const tokensWithSymbolsPromise = tokens.map(async (t) => {
+        let decimals = 18
+        if (t.address !== '0x0000000000000000000000000000000000000000'){
+          const erc20 = new rpcProvider.provider.eth.Contract(ERC20_ABI.abi, t.address)
+          decimals = await erc20.methods.decimals().call()
+        }
+        return {
+          address: t.address,
+          ticker: t.ticker,
+          symbol: Web3.utils.toAscii(t.ticker),
+          decimals: decimals
+        }
+      })
+      Promise.all(tokensWithSymbolsPromise)
+      .then((tokensWithSymbols) => {
+        setAppState((prevState) => ({
+          ...prevState,
+          blockNumber: currentBlock,
+          tokens: tokensWithSymbols,
+          baseToken: tokensWithSymbols[0]
+        }))
+      })
 
-      setAppState((prevState) => ({
-        ...prevState,
-        blockNumber: currentBlock,
-        tokens: tokensWithSymbols,
-        baseToken: tokensWithSymbols[0]
-      }))
+      // setAppState((prevState) => ({
+      //   ...prevState,
+      //   blockNumber: currentBlock,
+      //   tokens: tokensWithSymbols,
+      //   baseToken: tokensWithSymbols[0]
+      // }))
 
       return true
     }
@@ -367,13 +480,13 @@ function App() {
   }, [dexContract, rpcProvider])
 
   /**
-   * @dev Update Dex
+   * @dev Update Dex on baseToken change
    * 
    * Side effect depends on: baseToken
    *  
    * Cleanup: n/a
    * */ 
-  useEffect (() => {
+   useEffect (() => {
 
     const getPairedTokens = async () => {
 
@@ -392,15 +505,18 @@ function App() {
       })
       await Promise.all(pairPromises)
       .then((pairs) => {
-          const pairedTokenSet = pairs.filter((item,pos,arr) => (item.isValid === true)).map((token) : IToken => ({address: token.address, ticker: token.ticker, symbol: token.symbol}))
-          const pairedToken = pairedTokenSet.length > 0 ? pairedTokenSet[0] : null
-          setAppState((prevState) : IAppState => {
-            return {
-              ...prevState,
-              pairedTokenSet: pairedTokenSet,
-              pairedToken: pairedToken
-            }
-          })
+          
+        const pairedTokenSet = pairs.filter((item,pos,arr) => (item.isValid === true))
+        .map((token) : IToken => ({address: token.address, ticker: token.ticker, symbol: token.symbol, decimals: token.decimals}))
+
+        const pairedToken = pairedTokenSet.length > 0 ? pairedTokenSet[0] : null
+        setAppState((prevState) : IAppState => {
+          return {
+            ...prevState,
+            pairedTokenSet: pairedTokenSet,
+            pairedToken: pairedToken
+          }
+        })
       })
       
       return true
@@ -424,6 +540,82 @@ function App() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState.baseToken])
+
+  /**
+   * @dev Update Dex on when pairedToken changes
+   * 
+   * Side effect depends on: getOrderBook and getChartData callbacks
+   *  
+   * Cleanup: n/a
+   * */ 
+  useEffect (() => {
+
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      getOrderBook()
+      getChartData()
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+     componentWillMount()
+
+     //useEffect cleanup:
+     //return clean up callback
+
+  }, [getOrderBook, getChartData])
+
+  /**
+   * @dev Update Dex on pairedToken and currentAccount change
+   * 
+   * Side effect depends on: pairedToken and currentAccount
+   *  
+   * Cleanup: unsubscribe from DEX events for the particular account
+   * */ 
+  useEffect (() => {
+
+    if(!appState.baseToken || !dexContract || !metamask.currentAccount) {
+      return
+    }
+
+    const unsubscribe = () => {
+      console.log("Unsubscribed from DEX events for trader");
+    }
+
+    const subscribe = () => {
+      console.log("Subscribed for DEX events for trader");
+    }
+
+    const getActiveOrders = () => {
+      
+    }
+
+    const getCompletedOrders = () => {
+      
+    }
+
+    /**
+     * @dev React component lifecycle alias
+     * */
+    const componentWillMount = async () => {
+      getActiveOrders()
+      getCompletedOrders()
+      subscribe()
+      //console.log(bRes ? '[getPairedTokens] - Success' : '[getPairedTokens]: failure');
+    }
+
+    /**
+     * @dev Call the lifecycle function
+     * */
+     componentWillMount()
+
+     //useEffect cleanup:
+     return unsubscribe
+
+  }, [appState.pairedToken, metamask.currentAccount])
 
   const handleBaseTokenChange = (newBaseToken) => {
     setAppState((prevState) => {
@@ -475,7 +667,7 @@ function App() {
               metamask={metamask} 
               appstate={appState} 
             />
-            <DexTradeInfo appState={appState} dexContract={dexContract}/>
+            <DexTradeInfo appState={appState} dexContract={dexContract} rpcProvider={rpcProvider}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>
