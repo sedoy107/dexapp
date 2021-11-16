@@ -49,7 +49,8 @@ export default function TokenPicker(props) {
         props.handleBaseTokenChange( {
             ticker: e.currentTarget.dataset.ticker, 
             symbol: e.currentTarget.dataset.symbol, 
-            address: e.currentTarget.dataset.address
+            address: e.currentTarget.dataset.address,
+            decimals: e.currentTarget.dataset.decimals
         })
     }
 
@@ -60,7 +61,8 @@ export default function TokenPicker(props) {
             onClick={handleBaseTokenItemClick} 
             data-ticker={token.ticker} 
             data-symbol={token.symbol}
-            data-address={token.address}>
+            data-address={token.address}
+            data-decimals={token.decimals}>
                 {token.symbol}
             </Dropdown.Item>
         )
@@ -74,7 +76,8 @@ export default function TokenPicker(props) {
         props.handlePairedTokenChange( {
             ticker: e.currentTarget.dataset.ticker, 
             symbol: e.currentTarget.dataset.symbol, 
-            address: e.currentTarget.dataset.address
+            address: e.currentTarget.dataset.address,
+            decimals: e.currentTarget.dataset.decimals
         })
     }
 
@@ -85,7 +88,8 @@ export default function TokenPicker(props) {
             onClick={handlePairedTokenItemClick}
             data-ticker={token.ticker} 
             data-symbol={token.symbol}
-            data-address={token.address}>
+            data-address={token.address}
+            data-decimals={token.decimals}>
                 {token.symbol}
             </Dropdown.Item>
         )

@@ -78,6 +78,7 @@ export interface IPage {
 
 // IOrderbookItem
 export interface IOrderBookItem {
+  id: number,
   price: number,
   amount: number
 }
@@ -206,13 +207,11 @@ function App() {
     componentWillMount()
   }, [connectMetamask])
 
-  const getOrderBook = useCallback (() => {
+  const updateOrderBook = () => {
 
     if(!appState.pairedToken || !dexContract) {
       return
     }
-
-    console.log("Update getOrderBook callback");
 
     const BUY = 0
     const SELL = 1
@@ -220,9 +219,10 @@ function App() {
     dexContract.methods.getOrderBook(BUY, appState.baseToken.ticker, appState.pairedToken.ticker).call()
     .then(orderbook => {
       setOrderBook((prevOrderBook) => {
+        console.log("Update BUY orderbook");
         return {
           ...prevOrderBook,
-          buy: orderbook.map((order) => ({price: order.price, amount: order.amount}))
+          buy: orderbook.map(({id, price, amount, filled}) => ({id: id, price: price, amount: amount - filled}))
         }
       })
     })
@@ -233,9 +233,10 @@ function App() {
     dexContract.methods.getOrderBook(SELL, appState.baseToken.ticker, appState.pairedToken.ticker).call()
     .then(orderbook => {
       setOrderBook((prevOrderBook) => {
+        console.log("Update SELL orderbook");
         return {
           ...prevOrderBook,
-          sell: orderbook.map((order) => ({price: order.price, amount: order.amount}))
+          sell: orderbook.map(({id, price, amount, filled}) => ({id: id, price: price, amount: amount - filled}))
         }
       })
     })
@@ -243,9 +244,9 @@ function App() {
         console.error(err);
     })
 
-  }, [dexContract, appState.pairedToken])
+  }
 
-  const getChartData = useCallback (() => {
+  const updateChartData = () => {
 
     if(!appState.baseToken) {
       return
@@ -253,7 +254,7 @@ function App() {
 
     console.log("Placeholder for fetching chart data");
 
-  }, [appState.pairedToken])
+  }
 
   /**
    * @dev Initialize Network
@@ -287,9 +288,7 @@ function App() {
           console.log(subscriptionId);
       })
       .on("data", function(blockHeader){
-          console.log(blockHeader);
           setAppState((prevState) => ({...prevState, blockNumber: blockHeader.number}))
-          getOrderBook()
       })
       .on("error", console.error);
   
@@ -394,9 +393,6 @@ function App() {
    * Cleanup: n/a
    * */ 
   useEffect (() => {
-
-    
-
     /**
      * - Initialize smart contract
      * - Subscribe for smart contract events
@@ -544,7 +540,7 @@ function App() {
   /**
    * @dev Update Dex on when pairedToken changes
    * 
-   * Side effect depends on: getOrderBook and getChartData callbacks
+   * Side effect depends on: updateOrderBook and updateChartData callbacks
    *  
    * Cleanup: n/a
    * */ 
@@ -554,8 +550,8 @@ function App() {
      * @dev React component lifecycle alias
      * */
     const componentWillMount = async () => {
-      getOrderBook()
-      getChartData()
+      updateOrderBook()
+      updateChartData()
     }
 
     /**
@@ -566,7 +562,7 @@ function App() {
      //useEffect cleanup:
      //return clean up callback
 
-  }, [getOrderBook, getChartData])
+  }, [dexContract, appState.pairedToken, appState.blockNumber])
 
   /**
    * @dev Update Dex on pairedToken and currentAccount change
@@ -667,7 +663,7 @@ function App() {
               metamask={metamask} 
               appstate={appState} 
             />
-            <DexTradeInfo appState={appState} dexContract={dexContract} rpcProvider={rpcProvider}/>
+            <DexTradeInfo orderBook={orderBook} appState={appState}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>

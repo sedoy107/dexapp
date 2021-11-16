@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import React, {useState, useEffect} from 'react'
+import { Table, Spinner } from 'react-bootstrap'
 
 // Generic styles for the page
 const GrandParentContainer = styled.div`
@@ -49,11 +50,129 @@ function Chart(props) {
 // Orderbook panel
 const OrderbookDiv = styled(ColumnPanel)`
     margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
 `
+const OrderbookAwaitDiv = styled(ColumnPanel)`
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+`
+const BuySideDiv = styled.div`
+    overflow-y: scroll;
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    background-color: rgba(0,0,255,0.2);
+`
+const SellSideDiv = styled.div`
+    overflow-y: scroll;
+    width: 100%;
+    border-radius: 0 0 10px 10px;
+    background-color: rgba(255,0,0,0.2);
+    padding-bottom: .5rem;
+`
+const SpreadDiv = styled.div`
+    font-size: 0.75rem;
+    margin-bottom: 0px;
+    padding: 0 .5rem;
+    width: 100%;
+    background-color: rgba(255,0,255,0.1);
+`
+const buyRowStyle = {
+    padding: '0 .5rem',
+}
+const sellRowStyle = {
+    padding: '0 .5rem',
+}
+const headerStyle = {
+    padding: '0 .5rem'
+}
+export interface IOrderBookDisplay {
+    buy: any[],
+    sell: any[],
+    spread: number
+}
 
 function Orderbook(props) {
+
+    const [orderbook, setOrderbook] = useState<IOrderBookDisplay | null>(null)
+
+    useEffect(() => {
+
+        const buyOrders = props.orderBook.buy.map(({id, price, amount}) => {
+            return (
+                <tr key={id}>
+                    <td style={buyRowStyle}>{price}</td>
+                    <td style={buyRowStyle}>{amount}</td>
+                </tr>
+            )
+        })
+        const sellOrders = props.orderBook.sell.map(({id, price, amount}) => {
+            return (
+                <tr key={id}>
+                    <td style={sellRowStyle}>{price}</td>
+                    <td style={sellRowStyle}>{amount}</td>
+                </tr>
+            )
+        }).reverse()
+
+        const spread = props.orderBook.buy.length > 0 && props.orderBook.sell.length > 0 
+        ? Math.abs(props.orderBook.buy.slice(-1)[0].price - props.orderBook.sell.slice(-1)[0].price) : 0
+
+        setOrderbook(() => {
+            return {
+                buy: buyOrders,
+                sell: sellOrders,
+                spread: spread
+            }
+        })
+
+    }, [props.appState.baseToken, props.orderBook])
+
     return (
-        <OrderbookDiv><Title>Orderbook</Title></OrderbookDiv>
+        !orderbook 
+        ? 
+        <OrderbookAwaitDiv>
+            <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+            </Spinner>
+        </OrderbookAwaitDiv>
+        : orderbook.buy.length === 0 && orderbook.sell.length === 0
+        ?
+        <OrderbookAwaitDiv>
+            <p>No orders found</p>
+        </OrderbookAwaitDiv>
+        :
+        <OrderbookDiv>
+            <Table striped hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+                <thead>
+                    <tr>
+                        <th style={headerStyle}>Price</th>
+                        <th style={headerStyle}>Quantity</th>
+                    </tr>
+                </thead>
+            </Table>
+            <BuySideDiv>
+            <Table striped borderless hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+                <tbody>
+                    {orderbook.buy}
+                </tbody>
+            </Table>
+            </BuySideDiv>
+            <SpreadDiv>Spread: {orderbook.spread}</SpreadDiv>
+            <SellSideDiv>
+            <Table striped borderless hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+                <tbody>
+                    {orderbook.sell}
+                </tbody>
+            </Table>
+            </SellSideDiv>
+        </OrderbookDiv>
     )
 }
 
@@ -88,11 +207,11 @@ export default function DexTradeInfo(props) {
         <GrandParentContainer>
         <ParentContainer>
             <RowPanelBase>
-                <Chart appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
-                <Orderbook appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
+                <Chart />
+                <Orderbook orderBook={props.orderBook} appState={props.appState}/>
             </RowPanelBase>
             <RowPanelBase>
-                <Orders appState={props.appState} dexContract={props.dexContract} rpcProvider={props.rpcProvider}/>
+                <Orders />
             </RowPanelBase>
         </ParentContainer>
         </GrandParentContainer>
