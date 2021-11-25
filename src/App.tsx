@@ -89,29 +89,6 @@ export interface IOrderBook {
   sell: IOrderBookItem[]
 }
 
-// IOrderRaw
-export interface IOrderRaw {
-  id: number,
-  trader: string,
-  side: number, 
-  orderType: number,
-  tickerTo: string, 
-  tickerFrom: string, 
-  price: number, 
-  amount: number
-}
-
-export interface IOrder {
-  id: number,
-  trader: string,
-  side: number,
-  orderType: number,
-  baseToken: IToken,
-  pairedToken: IToken,
-  price: number,
-  amount: number
-}
-
 // Styles
 const PageContainer = styled.div`
   margin: 0px 10px 0px 10px;
@@ -132,6 +109,7 @@ function App() {
   const [appState, setAppState] = useState<IAppState>(defaultAppState)
   const [orderModalShow, setOrderModalShow] = useState(false)
   const [orderBook, setOrderBook] = useState<IOrderBook>({buy: [], sell: []})
+  const [orderHistory, setOrderHistory] = useState<any>(null)
 
   const connectMetamask = useCallback( async (isInitialConnect: boolean) => {
 
@@ -402,15 +380,11 @@ function App() {
 
       // Aux function to get tokens from the contract 
       const getTokens = async (contract: Contract) => {
-        const ethToken = {
-          address: '0x0000000000000000000000000000000000000000',
-          ticker: '0x4554480000000000000000000000000000000000000000000000000000000000'
-        }
         const tokens = await contract.methods.getTokenList().call()
-        return [ethToken].concat([...tokens]
+        return [...tokens]
           .sort((a,b) => (a.ticker > b.ticker ? 1 : -1))
           .filter((i,p,a) => {return !p || i.ticker !== a[p - 1].ticker})
-          .map((token) => ({address: token.tokenAddress, ticker: token.ticker})))
+          .map((token) => ({address: token.tokenAddress, ticker: token.ticker, decimals: token.decimals, symbol:Web3.utils.toAscii(token.ticker)}))
       }
       
       // Check if any of the required states aren't ready yet
@@ -423,36 +397,13 @@ function App() {
 
       // Get token list from the contract
       const tokens = await getTokens(dexContract)
-      //const tokensWithSymbols = tokens.map((t) => ({address: t.address, ticker:t.ticker, symbol:Web3.utils.toAscii(t.ticker)}))
-      const tokensWithSymbolsPromise = tokens.map(async (t) => {
-        let decimals = 18
-        if (t.address !== '0x0000000000000000000000000000000000000000'){
-          const erc20 = new rpcProvider.provider.eth.Contract(ERC20_ABI.abi, t.address)
-          decimals = await erc20.methods.decimals().call()
-        }
-        return {
-          address: t.address,
-          ticker: t.ticker,
-          symbol: Web3.utils.toAscii(t.ticker),
-          decimals: decimals
-        }
-      })
-      Promise.all(tokensWithSymbolsPromise)
-      .then((tokensWithSymbols) => {
-        setAppState((prevState) => ({
-          ...prevState,
-          blockNumber: currentBlock,
-          tokens: tokensWithSymbols,
-          baseToken: tokensWithSymbols[0]
-        }))
-      })
 
-      // setAppState((prevState) => ({
-      //   ...prevState,
-      //   blockNumber: currentBlock,
-      //   tokens: tokensWithSymbols,
-      //   baseToken: tokensWithSymbols[0]
-      // }))
+      setAppState((prevState) => ({
+        ...prevState,
+        blockNumber: currentBlock,
+        tokens: tokens,
+        baseToken: tokens[0]
+      }))
 
       return true
     }
@@ -573,34 +524,123 @@ function App() {
    * */ 
   useEffect (() => {
 
-    if(!appState.baseToken || !dexContract || !metamask.currentAccount) {
+    if(!dexContract || !metamask.currentAccount) {
       return
     }
 
     const unsubscribe = () => {
-      console.log("Unsubscribed from DEX events for trader");
+      console.log(`Unsubscribed from DEX events for trader ${metamask.currentAccount}`);
     }
 
     const subscribe = () => {
-      console.log("Subscribed for DEX events for trader");
+      dexContract.events.OrderCreated({
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: "latest"
+      }, function(error, event){ console.log(event); })
+      .on("connected", function(subscriptionId){
+          console.log(`Subscribed for OrderCreated events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
+      })
+      .on('data', (event) => {
+          console.log(appState.blockNumber);
+          console.log(event); // same results as the optional callback above
+      })
+      .on('changed', (event) => {
+          // remove event from local database
+      })
+      .on('error', (error, receipt) => { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+          console.error(error)
+      })
+
+      dexContract.events.OrderFilled({
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: "latest"
+      }, function(error, event){ console.log(event); })
+      .on("connected", function(subscriptionId){
+          console.log(`Subscribed for OrderFilled events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
+      })
+      .on('data', (event) => {
+          console.log(appState.blockNumber);
+          console.log(event); // same results as the optional callback above
+      })
+      .on('changed', (event) => {
+          // remove event from local database
+      })
+      .on('error', (error, receipt) => { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+          console.error(error)
+      })
+
+      dexContract.events.OrderRemoved({
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: "latest"
+      }, function(error, event){ console.log(event); })
+      .on("connected", function(subscriptionId){
+          console.log(`Subscribed for OrderFilled events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
+      })
+      .on('data', (event) => {
+          console.log(appState.blockNumber);
+          console.log(event); // same results as the optional callback above
+      })
+      .on('changed', (event) => {
+          // remove event from local database
+      })
+      .on('error', (error, receipt) => { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+          console.error(error)
+      })
     }
 
-    const getActiveOrders = () => {
-      
-    }
+    const processPastEvents = async () => {
+      const evtOrderCreated = await dexContract.getPastEvents('OrderCreated', {
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: 0,
+        toBlock: 'latest'
+      })
 
-    const getCompletedOrders = () => {
+      const evtOrderFilled = await dexContract.getPastEvents('OrderFilled', {
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: 0,
+        toBlock: 'latest'
+      })
+
+      const evtOrderRemoved = await dexContract.getPastEvents('OrderRemoved', {
+        filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
+        fromBlock: 0,
+        toBlock: 'latest'
+      })
+
+      let orderHashTable = evtOrderCreated
+      .map(({returnValues}) => returnValues)
+      .reduce((obj, item) =>  (obj[item['id']] = {
+        id: item.id, 
+        orderType: item.orderType, 
+        side: item.side, 
+        amount: item.amount, 
+        price: item.price, 
+        tickerFrom: item.tickerFrom, 
+        tickerTo: item.tickerTo, 
+        trader: item.trader,
+        filled: 0,
+        complete: false
+      }, obj), {})
       
+      evtOrderFilled.forEach(({returnValues}) => {
+        const {id, trader, price, filled} = returnValues
+        orderHashTable[id].filled = orderHashTable[id].filled < filled ? filled : orderHashTable[id].filled
+      })
+
+      evtOrderRemoved.forEach(({returnValues}) => {
+        const {id, trader, filled} = returnValues
+        orderHashTable[id].complete = true
+      })
+
+      setOrderHistory(() => orderHashTable)
     }
 
     /**
      * @dev React component lifecycle alias
      * */
     const componentWillMount = async () => {
-      getActiveOrders()
-      getCompletedOrders()
+      processPastEvents()
       subscribe()
-      //console.log(bRes ? '[getPairedTokens] - Success' : '[getPairedTokens]: failure');
     }
 
     /**
@@ -611,7 +651,7 @@ function App() {
      //useEffect cleanup:
      return unsubscribe
 
-  }, [appState.pairedToken, metamask.currentAccount])
+  }, [metamask.currentAccount])
 
   const handleBaseTokenChange = (newBaseToken) => {
     setAppState((prevState) => {

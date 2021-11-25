@@ -85,38 +85,55 @@ const SpreadDiv = styled.div`
 `
 const buyRowStyle = {
     padding: '0 .5rem',
+    width: '50%',
 }
 const sellRowStyle = {
     padding: '0 .5rem',
+    width: '50%',
 }
 const headerStyle = {
-    padding: '0 .5rem'
+    padding: '0 .5rem',
+    width: '50%',
+    textAlign: 'center' as const
 }
+const tableStyle = {
+    fontSize: '0.75rem',
+    marginBottom: '0px'
+}
+
 export interface IOrderBookDisplay {
     buy: any[],
     sell: any[],
-    spread: number
+    spread: string
 }
 
 function Orderbook(props) {
+
+    const formatPrice = (quantity, decimals) => {
+        return new Intl.NumberFormat('en-EN', {minimumFractionDigits: 9,}).format(quantity / 10 ** decimals)
+    }
 
     const [orderbook, setOrderbook] = useState<IOrderBookDisplay | null>(null)
 
     useEffect(() => {
 
+        if (!props.appState.baseToken || !props.appState.pairedToken) {
+            return
+        }
+
         const buyOrders = props.orderBook.buy.map(({id, price, amount}) => {
             return (
                 <tr key={id}>
-                    <td style={buyRowStyle}>{price}</td>
-                    <td style={buyRowStyle}>{amount}</td>
+                    <td style={buyRowStyle}>{formatPrice(price, props.appState.pairedToken.decimals)}</td>
+                    <td style={buyRowStyle}>{formatPrice(amount, props.appState.baseToken.decimals)}</td>
                 </tr>
             )
         })
         const sellOrders = props.orderBook.sell.map(({id, price, amount}) => {
             return (
                 <tr key={id}>
-                    <td style={sellRowStyle}>{price}</td>
-                    <td style={sellRowStyle}>{amount}</td>
+                    <td style={sellRowStyle}>{formatPrice(price, props.appState.pairedToken.decimals)}</td>
+                    <td style={sellRowStyle}>{formatPrice(amount, props.appState.baseToken.decimals)}</td>
                 </tr>
             )
         }).reverse()
@@ -128,7 +145,7 @@ function Orderbook(props) {
             return {
                 buy: buyOrders,
                 sell: sellOrders,
-                spread: spread
+                spread: formatPrice(spread, props.appState.pairedToken.decimals)
             }
         })
 
@@ -149,7 +166,7 @@ function Orderbook(props) {
         </OrderbookAwaitDiv>
         :
         <OrderbookDiv>
-            <Table striped hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+            <Table striped hover style={tableStyle}>
                 <thead>
                     <tr>
                         <th style={headerStyle}>Price</th>
@@ -158,15 +175,15 @@ function Orderbook(props) {
                 </thead>
             </Table>
             <BuySideDiv>
-            <Table striped borderless hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+            <Table striped borderless hover style={tableStyle}>
                 <tbody>
                     {orderbook.buy}
                 </tbody>
             </Table>
             </BuySideDiv>
-            <SpreadDiv>Spread: {orderbook.spread}</SpreadDiv>
+            <SpreadDiv>Spread of {`${props.appState.pairedToken.symbol ? props.appState.pairedToken.symbol : ''} ${orderbook.spread}`}</SpreadDiv>
             <SellSideDiv>
-            <Table striped borderless hover style={{fontSize: '0.75rem', marginBottom: '0px'}}>
+            <Table striped borderless hover style={tableStyle}>
                 <tbody>
                     {orderbook.sell}
                 </tbody>
