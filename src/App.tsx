@@ -185,9 +185,10 @@ function App() {
     componentWillMount()
   }, [connectMetamask])
 
-  const updateOrderBook = () => {
+  const updateOrderBook = useCallback(() => {
 
     if(!appState.pairedToken || !dexContract) {
+      setOrderBook(() => ({buy: [], sell: []}))
       return
     }
 
@@ -222,7 +223,7 @@ function App() {
         console.error(err);
     })
 
-  }
+  }, [dexContract, appState.pairedToken])
 
   const updateChartData = () => {
 
@@ -528,21 +529,48 @@ function App() {
       return
     }
 
+    const subscriptions = {
+      OrderCreated: null,
+      OrderFilled: null,
+      OrderRemoved: null
+    }
+    
     const unsubscribe = () => {
-      console.log(`Unsubscribed from DEX events for trader ${metamask.currentAccount}`);
+      for (let eventName in subscriptions) {
+        if (subscriptions[eventName]) {
+          subscriptions[eventName].unsubscribe()
+          console.log(`Unsubscribed from DEX ${eventName} events for trader ${metamask.currentAccount}`);
+        }
+      }
     }
 
     const subscribe = () => {
-      dexContract.events.OrderCreated({
+      subscriptions.OrderCreated = dexContract.events.OrderCreated({
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
         fromBlock: "latest"
       }, function(error, event){ console.log(event); })
       .on("connected", function(subscriptionId){
           console.log(`Subscribed for OrderCreated events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
       })
-      .on('data', (event) => {
-          console.log(appState.blockNumber);
-          console.log(event); // same results as the optional callback above
+      .on('data', ({returnValues}) => {
+        setOrderHistory((prevOrderHistory) => {
+          const newOrderHistory = {...prevOrderHistory} 
+          const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader} = returnValues
+          newOrderHistory[id] = {
+            id:id,
+            orderType:orderType,
+            side:side,
+            amount:amount,
+            price:price,
+            tickerFrom:tickerFrom,
+            tickerTo:tickerTo,
+            trader:trader,
+            filled:0,
+            complete:false
+          }
+          
+          return newOrderHistory
+        })
       })
       .on('changed', (event) => {
           // remove event from local database
@@ -551,17 +579,21 @@ function App() {
           console.error(error)
       })
 
-      dexContract.events.OrderFilled({
+      subscriptions.OrderFilled = dexContract.events.OrderFilled({
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
         fromBlock: "latest"
       }, function(error, event){ console.log(event); })
       .on("connected", function(subscriptionId){
           console.log(`Subscribed for OrderFilled events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
       })
-      .on('data', (event) => {
-          console.log(appState.blockNumber);
-          console.log(event); // same results as the optional callback above
-      })
+      .on('data', ({returnValues}) => {
+        setOrderHistory((prevOrderHistory) => {
+          const newOrderHistory = {...prevOrderHistory} 
+          const {id, trader, price, filled} = returnValues
+          newOrderHistory[id].filled = Web3.utils.toBN(newOrderHistory[id].filled).lt(Web3.utils.toBN(filled)) ? filled : newOrderHistory[id].filled
+          return newOrderHistory
+        })
+    })
       .on('changed', (event) => {
           // remove event from local database
       })
@@ -569,16 +601,20 @@ function App() {
           console.error(error)
       })
 
-      dexContract.events.OrderRemoved({
+      subscriptions.OrderRemoved = dexContract.events.OrderRemoved({
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
         fromBlock: "latest"
       }, function(error, event){ console.log(event); })
       .on("connected", function(subscriptionId){
           console.log(`Subscribed for OrderFilled events for ${metamask.currentAccount}. SubscriptionId: ${subscriptionId}`);
       })
-      .on('data', (event) => {
-          console.log(appState.blockNumber);
-          console.log(event); // same results as the optional callback above
+      .on('data', ({returnValues}) => {
+          setOrderHistory((prevOrderHistory) => {
+            const newOrderHistory = {...prevOrderHistory} 
+            const {id, trader, filled} = returnValues
+            newOrderHistory[id].complete = true
+            return newOrderHistory
+          })
       })
       .on('changed', (event) => {
           // remove event from local database
@@ -624,7 +660,7 @@ function App() {
       
       evtOrderFilled.forEach(({returnValues}) => {
         const {id, trader, price, filled} = returnValues
-        orderHashTable[id].filled = orderHashTable[id].filled < filled ? filled : orderHashTable[id].filled
+        orderHashTable[id].filled = Web3.utils.toBN(orderHashTable[id].filled).lt(Web3.utils.toBN(filled)) ? filled : orderHashTable[id].filled
       })
 
       evtOrderRemoved.forEach(({returnValues}) => {
@@ -703,7 +739,7 @@ function App() {
               metamask={metamask} 
               appstate={appState} 
             />
-            <DexTradeInfo orderBook={orderBook} appState={appState}/>
+            <DexTradeInfo orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>

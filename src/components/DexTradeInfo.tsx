@@ -1,6 +1,9 @@
 import styled from 'styled-components'
-import React, {useState, useEffect} from 'react'
-import { Table, Spinner } from 'react-bootstrap'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Table, Spinner, Button } from 'react-bootstrap'
+import { ORDER_SIDE, ORDER_TYPE } from '../utils/enums'
+import { formatPrice, } from '../utils/utils'
+import { OrderCancelModal } from './Modals'
 
 // Generic styles for the page
 const GrandParentContainer = styled.div`
@@ -109,15 +112,13 @@ export interface IOrderBookDisplay {
 
 function Orderbook(props) {
 
-    const formatPrice = (quantity, decimals) => {
-        return new Intl.NumberFormat('en-EN', {minimumFractionDigits: 9,}).format(quantity / 10 ** decimals)
-    }
-
     const [orderbook, setOrderbook] = useState<IOrderBookDisplay | null>(null)
 
     useEffect(() => {
-
+        //debugger
         if (!props.appState.baseToken || !props.appState.pairedToken) {
+            //setOrderbook(() => ({buy: [], sell: [], spread: ''}))
+            setOrderbook(() => (null))
             return
         }
 
@@ -149,7 +150,7 @@ function Orderbook(props) {
             }
         })
 
-    }, [props.appState.baseToken, props.orderBook])
+    }, [props.orderBook])
 
     return (
         !orderbook 
@@ -163,7 +164,7 @@ function Orderbook(props) {
         ?
         <OrderbookAwaitDiv>
             <p>No orders found</p>
-        </OrderbookAwaitDiv>
+        </OrderbookAwaitDiv>    
         :
         <OrderbookDiv>
             <Table striped hover style={tableStyle}>
@@ -181,7 +182,7 @@ function Orderbook(props) {
                 </tbody>
             </Table>
             </BuySideDiv>
-            <SpreadDiv>Spread of {`${props.appState.pairedToken.symbol ? props.appState.pairedToken.symbol : ''} ${orderbook.spread}`}</SpreadDiv>
+            <SpreadDiv>Spread of {!props.appState.pairedToken ? '' :`${props.appState.pairedToken.symbol ? props.appState.pairedToken.symbol : ''} ${orderbook.spread}`}</SpreadDiv>
             <SellSideDiv>
             <Table striped borderless hover style={tableStyle}>
                 <tbody>
@@ -194,9 +195,9 @@ function Orderbook(props) {
 }
 
 // Orders panel
-const OrderTabs = styled.div`
+const OrderTab = styled.div`
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: start;
 `
 const TabButton = styled.button`
@@ -207,13 +208,185 @@ const TabButton = styled.button`
 const OrdersDiv = styled(RowPanel)`
     width: 100%;
 `
+const OrdersAwaitDiv = styled(RowPanel)`
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+`
+const CancelOrderButton = styled.button`
+    height: 18px;
+    width: 18px;
+    color: #fff;
+    background-color: rgba(0,0,0,0);
+    border: none;
+`
+const ScrollableTable = styled.div`
+    width: 100%;
+    overflow-y: scroll;
+    height: 100%;
+`
+
+const ordersRowStyle = {
+    padding: '0 .5rem',
+    textAlign: 'center' as const
+}
+const ordersHeaderStyle = {
+    padding: '0 .5rem',
+    textAlign: 'center' as const
+}
+
+
 function Orders(props) {
+
+    const [activeOrders, setActiveOrders] = useState<any[]>([])
+    const [completedOrders, setCompletedOrders] = useState<any[]>([])
+    const [showCompleted, setShowCompleted] = useState(false)
+    const [showOrderCancelModal, setShowOrderCancelModal] = useState(false)
+    const [currentOrder, setCurrentOrder] = useState<any>(null)
+
+    useEffect(() => {
+
+        if (!props.appState.baseToken || !props.appState.pairedToken || !props.orderHistory) {
+            return
+        }
+
+        const activeOrderList: any[] = []
+        const completedOrderList: any[] = []
+
+        for (let oid in props.orderHistory) {
+            const order = props.orderHistory[oid]
+            const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
+            if (props.appState.baseToken.ticker === tickerTo && props.appState.pairedToken.ticker === tickerFrom) {
+                complete ? completedOrderList.push(order) : activeOrderList.push(order)
+            }
+        }
+
+        setActiveOrders(() => activeOrderList.sort((a,b) => (a.ticker > b.ticker ? 1 : -1)))
+        setCompletedOrders(() => completedOrderList.sort((a,b) => (a.ticker > b.ticker ? 1 : -1)))
+        
+
+    }, [props.appState.baseToken, props.appState.pairedToken, props.orderHistory])
+
+    const switchOrderType = () => {
+        setShowCompleted((prevState) => !prevState)
+    }
+
+    const handleOrderCancel = (order) => {
+        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
+        //console.log(`handleOrderCancel: ${id}, ${side}, ${tickerTo}, ${tickerFrom}, ${trader}`);
+        setCurrentOrder(() => order)
+        setShowOrderCancelModal(() => true)
+    }
+
+    const handleConfirmedOrderCancel = useCallback(() => {
+        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = currentOrder
+        //console.log(`handleConfirmedOrderCancel: ${id}, ${side}, ${tickerTo}, ${tickerFrom}, ${trader}`);
+        props.dexContract.methods.cancelOrder(id, side, tickerTo, tickerFrom).send({from: trader})
+        .then(() => {
+            setShowOrderCancelModal(() => false)
+        })
+        .catch(error => console.error(error))
+    }, [props.dexContract, currentOrder])
+
+    const activeOrderDisplayList = activeOrders.map((order) => {
+        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
+        return {
+            id: id,
+            orderType: ORDER_TYPE[orderType],
+            side: ORDER_SIDE[side],
+            quantity: amount,
+            price: price,
+            filled: filled
+        }
+    })
+
+    const completedOrderTableView = completedOrders.map((order) => {
+        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
+        return (
+            <tr key={id}>
+                <td style={ordersRowStyle}>{id}</td>
+                <td style={ordersRowStyle}>{ORDER_TYPE[orderType]}</td>
+                <td style={ordersRowStyle}>{ORDER_SIDE[side]}</td>
+                <td style={ordersRowStyle}>
+                    {`${formatPrice(filled, props.appState.baseToken.decimals)} / ${formatPrice(amount, props.appState.baseToken.decimals)}`}
+                </td>
+                <td style={ordersRowStyle}>{`${formatPrice(price, props.appState.pairedToken.decimals)}`}</td>
+                <td style={ordersRowStyle}>{filled/amount * 100}</td>
+                <td style={ordersRowStyle}></td>
+            </tr>
+        )
+    })
+
+    const activeOrderTableView = activeOrders.map((order) => {
+        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
+        return (
+            <tr key={id}>
+                <td style={ordersRowStyle}>{id}</td>
+                <td style={ordersRowStyle}>{ORDER_TYPE[orderType]}</td>
+                <td style={ordersRowStyle}>{ORDER_SIDE[side]}</td>
+                <td style={ordersRowStyle}>
+                    {`${formatPrice(filled, props.appState.baseToken.decimals)} / ${formatPrice(amount, props.appState.baseToken.decimals)}`}
+                </td>
+                <td style={ordersRowStyle}>{`${formatPrice(price, props.appState.pairedToken.decimals)}`}</td>
+                <td style={ordersRowStyle}>{filled/amount * 100}</td>
+                <td style={ordersRowStyle}>
+                    <CancelOrderButton 
+                    onClick={() => handleOrderCancel(order)}>
+                        <i className="fas fa-window-close" />
+                    </CancelOrderButton>
+                </td>
+            </tr>
+        )
+    })
+
+    const buttonTitle = showCompleted ? "Switch to Active Orders" : "Switch to Completed Orders"
+
     return (
+        !props.orderHistory 
+        ? 
+        <OrdersAwaitDiv>
+            <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+            </Spinner>
+        </OrdersAwaitDiv>
+        : (completedOrderTableView.length === 0 && showCompleted) || (activeOrderTableView.length === 0 && !showCompleted)
+        ?
+        <OrdersAwaitDiv>
+            <p>No order history found</p>
+        </OrdersAwaitDiv>    
+        :
         <OrdersDiv>
-            <OrderTabs>
-                <TabButton><Title>Active Orders</Title></TabButton>
-                <TabButton><Title>Completed Orders</Title></TabButton>
-            </OrderTabs>
+            <OrderCancelModal 
+                show={showOrderCancelModal} 
+                handleShow={() => setShowOrderCancelModal(true)} 
+                handleClose={() => setShowOrderCancelModal(false)} 
+                order={currentOrder}
+                handleConfirmedAction={handleConfirmedOrderCancel}
+            />
+            <OrderTab>
+                <TabButton onClick={switchOrderType}><Title>{buttonTitle}</Title></TabButton>
+                    <ScrollableTable>
+                        <Table striped hover style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={ordersHeaderStyle}>Id</th>
+                                <th style={ordersHeaderStyle}>Side</th>
+                                <th style={ordersHeaderStyle}>Type</th>
+                                <th style={ordersHeaderStyle}>{`Filled / Quantity, ${props.appState.baseToken.symbol}`}</th>
+                                <th style={ordersHeaderStyle}>{`Price, ${props.appState.pairedToken.symbol}`}</th>
+                                <th style={ordersHeaderStyle}>Filled, %</th>
+                                <th style={ordersHeaderStyle}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {showCompleted ? completedOrderTableView : activeOrderTableView}
+                        </tbody>
+                    </Table>
+                </ScrollableTable>
+            </OrderTab>
         </OrdersDiv>
     )
 }
@@ -228,7 +401,7 @@ export default function DexTradeInfo(props) {
                 <Orderbook orderBook={props.orderBook} appState={props.appState}/>
             </RowPanelBase>
             <RowPanelBase>
-                <Orders />
+                <Orders orderHistory={props.orderHistory} appState={props.appState} dexContract={props.dexContract}/>
             </RowPanelBase>
         </ParentContainer>
         </GrandParentContainer>
