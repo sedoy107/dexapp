@@ -289,19 +289,7 @@ function Orders(props) {
             setShowOrderCancelModal(() => false)
         })
         .catch(error => console.error(error))
-    }, [props.dexContract, currentOrder])
-
-    const activeOrderDisplayList = activeOrders.map((order) => {
-        const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
-        return {
-            id: id,
-            orderType: ORDER_TYPE[orderType],
-            side: ORDER_SIDE[side],
-            quantity: amount,
-            price: price,
-            filled: filled
-        }
-    })
+    }, [props.dexContract, currentOrder])   
 
     const completedOrderTableView = completedOrders.map((order) => {
         const {id, orderType, side, amount, price, tickerFrom, tickerTo, trader, filled, complete} = order
@@ -375,8 +363,8 @@ function Orders(props) {
                                 <th style={ordersHeaderStyle}>Id</th>
                                 <th style={ordersHeaderStyle}>Side</th>
                                 <th style={ordersHeaderStyle}>Type</th>
-                                <th style={ordersHeaderStyle}>{`Filled / Quantity, ${props.appState.baseToken.symbol}`}</th>
-                                <th style={ordersHeaderStyle}>{`Price, ${props.appState.pairedToken.symbol}`}</th>
+                                <th style={ordersHeaderStyle}>{`Filled / Quantity, ${props.appState.baseToken ? props.appState.baseToken.symbol : ''}`}</th>
+                                <th style={ordersHeaderStyle}>{`Price, ${props.appState.pairedToken ? props.appState.pairedToken.symbol : ''}`}</th>
                                 <th style={ordersHeaderStyle}>Filled, %</th>
                                 <th style={ordersHeaderStyle}>Actions</th>
                             </tr>
