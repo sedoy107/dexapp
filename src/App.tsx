@@ -737,7 +737,8 @@ function App() {
               show={orderModalShow} 
               onHide={() => setOrderModalShow(false)} 
               metamask={metamask} 
-              appstate={appState} 
+              appstate={appState}
+              dexcontract={dexContract}
             />
             <DexTradeInfo orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
