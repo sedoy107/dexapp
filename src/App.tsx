@@ -8,7 +8,7 @@ import '@fortawesome/fontawesome-free/js/all'
 // App components
 import AppHeader from './components/AppHeader'
 import TokenPicker from './components/TokenPicker'
-import DexTradeInfo from './components/DexTradeInfo'
+import DexDataPanel from './components/DexDataPanel'
 import AppStatusBar from './components/AppStatusBar'
 import Welcome from './components/Welcome'
 import { OrderModal } from './components/Modals'
@@ -20,7 +20,7 @@ import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
 
-const ERC20_ABI = require('../src/artifacts/ERC20.json')
+const ERC20_ABI = require('../src/artifacts/ERC20.json').abi
 
 declare const window: any;
 
@@ -615,6 +615,15 @@ function App() {
             newOrderHistory[id].complete = true
             return newOrderHistory
           })
+
+          /**
+           * TODO: withdraw funds to the wallet owned by `metamask.currentAccount`
+           * 
+           * Buy order: withdraw the amount filled
+           * Sell order: withdraw the amount filled * price / pairedToken.decimals
+           * 
+           * 
+           */
       })
       .on('changed', (event) => {
           // remove event from local database
@@ -740,7 +749,7 @@ function App() {
               appstate={appState}
               dexcontract={dexContract}
             />
-            <DexTradeInfo orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract}/>
+            <DexDataPanel orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>
