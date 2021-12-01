@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Spinner, Button } from 'react-bootstrap'
 import { ORDER_SIDE, ORDER_TYPE } from '../utils/enums'
 import { formatPrice, } from '../utils/utils'
