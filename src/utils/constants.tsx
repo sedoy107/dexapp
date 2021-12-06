@@ -1,5 +1,5 @@
-export const SELL = 0
-export const BUY = 1
+export const BUY = 0
+export const SELL = 1
 
 export const MARKET = 0
 export const LIMIT = 1

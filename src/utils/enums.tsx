@@ -1,6 +1,6 @@
 export const ORDER_SIDE = {
-    0: 'Sell',
-    1: 'Buy'
+    0: 'Buy',
+    1: 'Sell'
 }
 
 export const ORDER_TYPE = {
