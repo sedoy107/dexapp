@@ -65,12 +65,21 @@ const OrderbookAwaitDiv = styled(ColumnPanel)`
     justify-content: center;
     align-items: center;
 `
+const SidesDiv = styled.div`
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100%;
+`
 const BuySideDiv = styled.div`
     overflow-y: scroll;
     width: 100%;
     display: flex;
     flex-direction: column-reverse;
     background-color: rgba(0,0,255,0.2);
+    height: 47%;
 `
 const SellSideDiv = styled.div`
     overflow-y: scroll;
@@ -78,6 +87,7 @@ const SellSideDiv = styled.div`
     border-radius: 0 0 10px 10px;
     background-color: rgba(255,0,0,0.2);
     padding-bottom: .5rem;
+    height: 47%;
 `
 const SpreadDiv = styled.div`
     font-size: 0.75rem;
@@ -175,21 +185,23 @@ function Orderbook(props) {
                     </tr>
                 </thead>
             </Table>
-            <BuySideDiv>
-            <Table striped borderless hover style={tableStyle}>
-                <tbody>
-                    {orderbook.buy}
-                </tbody>
-            </Table>
-            </BuySideDiv>
-            <SpreadDiv>Spread of {!props.appState.pairedToken ? '' :`${props.appState.pairedToken.symbol ? props.appState.pairedToken.symbol : ''} ${orderbook.spread}`}</SpreadDiv>
-            <SellSideDiv>
-            <Table striped borderless hover style={tableStyle}>
-                <tbody>
-                    {orderbook.sell}
-                </tbody>
-            </Table>
-            </SellSideDiv>
+            <SidesDiv>
+                <BuySideDiv>
+                    <Table striped borderless hover style={tableStyle}>
+                        <tbody>
+                            {orderbook.buy}
+                        </tbody>
+                    </Table>
+                </BuySideDiv>
+                <SpreadDiv>Spread of {!props.appState.pairedToken ? '' :`${props.appState.pairedToken.symbol ? props.appState.pairedToken.symbol : ''} ${orderbook.spread}`}</SpreadDiv>
+                <SellSideDiv>
+                    <Table striped borderless hover style={tableStyle}>
+                        <tbody>
+                            {orderbook.sell}
+                        </tbody>
+                    </Table>
+                </SellSideDiv>
+            </SidesDiv>
         </OrderbookDiv>
     )
 }
@@ -209,7 +221,6 @@ const OrdersDiv = styled(RowPanel)`
     width: 100%;
 `
 const OrdersAwaitDiv = styled(RowPanel)`
-    margin-left: 5px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -226,7 +237,7 @@ const CancelOrderButton = styled.button`
 const ScrollableTable = styled.div`
     width: 100%;
     overflow-y: scroll;
-    height: 100%;
+    height: 32vh;
 `
 
 const ordersRowStyle = {
@@ -319,7 +330,7 @@ function Orders(props) {
                     {`${formatPrice(filled, props.appState.baseToken.decimals)} / ${formatPrice(amount, props.appState.baseToken.decimals)}`}
                 </td>
                 <td style={ordersRowStyle}>{`${formatPrice(price, props.appState.pairedToken.decimals)}`}</td>
-                <td style={ordersRowStyle}>{filled/amount * 100}</td>
+                <td style={ordersRowStyle}>{filled/amount * 100 < 1 && filled/amount * 100 > 0 ? '<1' : filled/amount * 100}</td>
                 <td style={ordersRowStyle}>
                     <CancelOrderButton 
                     onClick={() => handleOrderCancel(order)}>
@@ -340,7 +351,7 @@ function Orders(props) {
                 <span className="visually-hidden">Loading...</span>
             </Spinner>
         </OrdersAwaitDiv>
-        : (completedOrderTableView.length === 0 && showCompleted) || (activeOrderTableView.length === 0 && !showCompleted)
+        : (completedOrderTableView.length === 0) && (activeOrderTableView.length === 0)
         ?
         <OrdersAwaitDiv>
             <p>No order history found</p>
