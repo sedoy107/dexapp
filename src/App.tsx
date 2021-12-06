@@ -10,6 +10,7 @@ import AppHeader from './components/AppHeader'
 import TokenPicker from './components/TokenPicker'
 import DexDataPanel from './components/DexDataPanel'
 import AppStatusBar from './components/AppStatusBar'
+import TokenList from './components/TokenList'
 import Welcome from './components/Welcome'
 import { OrderModal } from './components/Modals'
 // Config
@@ -120,14 +121,16 @@ function App() {
       setMetamask(() => (defaultMetamaskState))
       return false
     }
-
+    
     const makeNewState = async (_isInitialConnect : boolean) => {
+      
       // Initialize metamask rpc provider
       const metamaskRpcProvider = new Web3(ethereum)
       const chainId = _isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_chainId' }) : ethereum.chainId
       const accounts = _isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
       const currentAccount = accounts.length === 0 ? null : accounts[0]
       const balance = currentAccount === null ? '0' : await metamaskRpcProvider.eth.getBalance(currentAccount)
+      console.log(`----------- ${balance}`)
       setMetamask(() : IMetamask => {
         return {
           provider: ethereum,
@@ -174,9 +177,9 @@ function App() {
     /**
      * @dev React component lifecycle alias
      * */
-     const componentWillMount = async () => {
-      const bRes = await connectMetamask(false)
-      console.log(bRes ? '[connectMetamask] - Success' : '[connectMetamask]: failure');
+    const componentWillMount = async () => {
+    const bRes = await connectMetamask(false)
+    console.log(bRes ? '[connectMetamask] - Success' : '[connectMetamask]: failure');
     }
 
     /**
@@ -332,7 +335,7 @@ function App() {
       
       // Check if the contract was deployed to the given network
       if (!dexBuildObject.networks.hasOwnProperty(rpcProvider.netId)) {
-        console.error('Contract hasn\'t been deployed to the given network')
+        console.error('Contract hasn\'t been deployed on the given network')
         return false
       }
 
@@ -698,6 +701,7 @@ function App() {
 
   }, [metamask.currentAccount])
 
+
   const handleBaseTokenChange = (newBaseToken) => {
     setAppState((prevState) => {
       return {
@@ -758,7 +762,7 @@ function App() {
         <Background>
           <PageContainer>
             <AppHeader title='DEX' appState={appState} pageId={2} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
-            
+              <TokenList appState={appState} rpcProvider={rpcProvider} metamask={metamask} dexContract={dexContract}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>

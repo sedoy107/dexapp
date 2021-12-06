@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Modal, Container, Row, Col, Button, Dropdown, Form } from 'react-bootstrap'
+import { Modal, Container, Row, Col, Button, Dropdown, Form, Spinner } from 'react-bootstrap'
 import { useCallback, useEffect, useState } from 'react'
 import { ORDER_SIDE, ORDER_TYPE } from '../utils/enums'
 import { formatPriceUI, formatPrice2 } from '../utils/utils'
@@ -11,6 +11,7 @@ import TokenInput from './extra/TokenInput'
 import {BUY, SELL, MARKET, LIMIT, IOC, FOK, MOC } from '../utils/constants'
 
 const ERC20_ABI = require('../../src/artifacts/ERC20.json').abi
+const DEX_ABI = require('../../src/artifacts/Dex.json').abi
 
 const ModalTitle = styled.p`
   font-size: 1rem;
@@ -62,9 +63,13 @@ const TokenBalance = styled.div`
 
 export function OrderModal(props) {
 
+  const TX_NO = 0
+  const TX_PENDING = 1
+  const TX_SENT = 2
+
   const defaultOrderState = {
-    side: 0,
-    type: 0,
+    side: BUY,
+    type: LIMIT,
     amount: '0',
     price: '0',
     valid: false,
@@ -78,32 +83,21 @@ export function OrderModal(props) {
     color: '#000',
     text: 'Dummy'
   })
-  const [readyState, setReadyState] = useState<any>({
-    ok: false,
-
-  })
+  const [txState, setTxState] = useState<any>(TX_NO)
 
   /**
    * Update token balances and market prices
    */
   useEffect(() => {
 
+    if(!props.appstate.baseToken || !props.appstate.pairedToken || !props.metamask.currentAccount) {
+      return
+    }
+
     const getBalances = async () => {
       
-      const Web3Client = new Web3(props.metamask.provider);
-      let baseTokenBalance = props.metamask.balance
-      let pairedTokenBalance = props.metamask.balance
-      
-      // Get base token balance
-      if (props.appstate.baseToken.address !== "0x0000000000000000000000000000000000000000" ) {
-        const baseTokenContract = new Web3Client.eth.Contract(ERC20_ABI, props.appstate.baseToken.address)
-        baseTokenBalance = await baseTokenContract.methods.balanceOf(props.metamask.currentAccount).call()
-      }
-      // Get paired token balance
-      if (props.appstate.pairedToken.address !== "0x0000000000000000000000000000000000000000") {
-        const pairedTokenContract = new Web3Client.eth.Contract(ERC20_ABI, props.appstate.pairedToken.address)
-        pairedTokenBalance = await pairedTokenContract.methods.balanceOf(props.metamask.currentAccount).call()
-      }
+      const baseTokenBalance = await props.dexcontract.methods.balances(props.metamask.currentAccount, props.appstate.baseToken.ticker).call()
+      const pairedTokenBalance = await props.dexcontract.methods.balances(props.metamask.currentAccount, props.appstate.pairedToken.ticker).call()
 
       return {base: baseTokenBalance, paired: pairedTokenBalance}
     }
@@ -113,22 +107,18 @@ export function OrderModal(props) {
       let buyMarket = '0'
       let sellMarket = '0'
       try {
-        buyMarket = await props.dexcontract.methods.getMarketPrice(BUY, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker).call()
+        buyMarket = await props.dexcontract.methods.getMarketPrice(SELL, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker).call()
       } catch (e) {}
       try {
-        sellMarket = await props.dexcontract.methods.getMarketPrice(SELL, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker).call()
+        sellMarket = await props.dexcontract.methods.getMarketPrice(BUY, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker).call()
       } catch (e) {}
 
       return {buy: buyMarket, sell: sellMarket}
     }
 
-    if(!props.appstate.baseToken || !props.appstate.pairedToken || !props.metamask) {
-      return
-    }
-
     getBalances().then((balances) => {
       setOrder((prevOrder) => ({...prevOrder, balances: balances}))
-    })   
+    })
     getMarket().then((market) => {
       setOrder((prevOrder) => ({...prevOrder, market: market}))
     }) 
@@ -174,7 +164,7 @@ export function OrderModal(props) {
   const changeBaseQuantity = (baseTokenQuantity) => {
     setOrder((prevOrder) => ({
       ...prevOrder, 
-      amount: BigInt(baseTokenQuantity * 10 ** baseTokenDecimals).toString()
+      amount: (BigInt(parseFloat(baseTokenQuantity) * 10 ** baseTokenDecimals)).toString()
     }))
   }
   // Handler for base token quantity change. Changes the `order.amount` by calculating the amount base on the paired token and price
@@ -184,15 +174,31 @@ export function OrderModal(props) {
     }
     setOrder((prevOrder) => ({
       ...prevOrder, 
-      amount: (BigInt(pairedTokenQuantity * 10 ** pairedTokenDecimals) * BigInt(10 ** baseTokenDecimals) / BigInt(order.price)).toString()
+      amount: (BigInt(parseFloat(pairedTokenQuantity) * 10 ** pairedTokenDecimals) * BigInt(10 ** baseTokenDecimals) / BigInt(order.price)).toString()
     }))
   }
   // Handler for price per token change
   const changeXchgRate = (pricePerToken) => {
     setOrder((prevOrder) => ({
       ...prevOrder, 
-      price: BigInt(pricePerToken * 10 ** pairedTokenDecimals).toString()
+      price: (BigInt(parseFloat(pricePerToken) * 10 ** pairedTokenDecimals)).toString()
     }))
+  }
+  // Send tx handler
+  const sendTx = () => {
+
+    setTxState(() => TX_PENDING)
+    const web3Client = new Web3(props.metamask.provider)
+    const dex = new web3Client.eth.Contract(DEX_ABI, props.dexcontract._address)
+
+    // Create order
+    dex.methods.createOrder(order.side, order.type, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker, order.price, order.amount).send({from: props.metamask.currentAccount})
+    .then((txHash) => {
+      setTxState(() => TX_NO)
+    })
+    .catch((error) => {
+      setTxState(() => TX_NO)
+    })
   }
 
   return (
@@ -207,7 +213,7 @@ export function OrderModal(props) {
           <TokenInfoVertical>
             <TokenInfoHorizontal>
               <TypeButton variant='secondary' onClick={changeType}>{ORDER_TYPE[order.type]}</TypeButton>
-              <SideButton variant={order.side ? 'info' : 'danger'} onClick={changeSide}>{ORDER_SIDE[order.side]}</SideButton>
+              <SideButton variant={order.side === BUY ? 'info' : 'danger'} onClick={changeSide}>{ORDER_SIDE[order.side]}</SideButton>
             </TokenInfoHorizontal>
             <TokenInfoHorizontal>
               <TokenLabel>{baseTokenSymbol}</TokenLabel>
@@ -215,6 +221,7 @@ export function OrderModal(props) {
               name='baseToken' 
               value={baseTokenQuantity}
               decimals={baseTokenDecimals} 
+              max={baseTokenBalance}
               onChange={changeBaseQuantity}
               />
               <TokenBalance>{` / ${formatPrice2(baseTokenBalance)}`}</TokenBalance>
@@ -225,6 +232,7 @@ export function OrderModal(props) {
               name='pairedToken' 
               value={calculatedPairedTokenValue}
               decimals={pairedTokenDecimals}
+              max={pairedTokenBalance}
               onChange={changePairedQuantity}
               />
               <TokenBalance>{` / ${formatPrice2(pairedTokenBalance)}`}</TokenBalance>
@@ -250,7 +258,7 @@ export function OrderModal(props) {
         </TokenInfoParent>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant='warning' onClick={props.onHide} disabled={disableSubmit}>Submit</Button>
+        <Button variant='warning' onClick={sendTx} disabled={disableSubmit}>{txState === TX_PENDING ? <Spinner animation="border" variant='secondary' size='sm'/> : 'Submit'}</Button>
         <Button variant='secondary' onClick={props.onHide}>Close</Button>
       </Modal.Footer>
     </Modal>
@@ -285,4 +293,54 @@ export function OrderCancelModal(props) {
       </Modal>
   )
 }
-  
+
+export function FundsModal(props) {
+
+  const WITHDRAW = 0
+  const DEPOSIT = 1
+
+  const theme = props.params.action === DEPOSIT 
+  ? {title: 'Deposit Funds to Dex', variant: 'info', confirm: 'Deposit'} 
+  : {title: 'Withdraw Funds from Dex', variant: 'danger', confirm: 'Withdraw'}
+
+  const maxValue = props.params.action === DEPOSIT
+  ? props.params.balance.wallet
+  : props.params.balance.dex
+
+  const [spinner, setSpinner] = useState(false)
+  const [amount, setAmount] = useState('0')
+
+  return (
+      <Modal show={props.show} onHide={props.handleClose} contentClassName='ModalDark'>
+        <Modal.Header closeButton>
+          <Modal.Title as={ModalTitle}>{theme.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <TokenInfoHorizontal>
+            {`Enter ${props.params.symbol} amount:`}
+          </TokenInfoHorizontal>
+          <TokenInfoHorizontal>
+            <TokenInput 
+            name='amount'
+            value=''
+            max={maxValue}
+            decimals={props.params.decimals} 
+            onChange={(v) => (setAmount(() => (BigInt(v) * BigInt(10 ** props.params.decimals)).toString()))}
+            />
+          </TokenInfoHorizontal>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={props.handleClose}>Back</Button>
+          <Button variant={theme.variant} onClick={() => {
+            setSpinner(() => true)
+            props.handleConfirmed({...props.params, amount: amount})
+            .then(() => setSpinner(false))
+            .catch(error => console.error(error))
+            props.handleClose()
+          }}>
+            {spinner ? <Spinner animation="border" variant='secondary' size='sm'/>  : theme.confirm}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+  )
+}  
