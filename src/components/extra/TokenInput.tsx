@@ -25,7 +25,8 @@ export default function TokenInput(props) {
 
     // Update on change within the text field
     const handleInputChange = (e) => {
-      if (e.target.value < 0) {
+      if (props.max && parseFloat(e.target.value) > parseFloat(props.max)) {
+        setValue(() => props.max)
         return
       }
       setValue(() => e.target.value)  
@@ -44,7 +45,12 @@ export default function TokenInput(props) {
             value={value}
             onChange={handleInputChange}
             onBlur={() => {
-              props.onChange(value)
+              if (isNaN(value) || value.length === 0) {
+                props.onChange(0)
+              }
+              else {
+                props.onChange(Math.abs(value))
+              }
               toggleEditing()
             }}
           />
@@ -63,6 +69,7 @@ export default function TokenInput(props) {
 TokenInput.propTypes = {
     name: PropTypes.string,
     value: PropTypes.string,
+    max: PropTypes.string,
     decimals: PropTypes.string,
     onChange: PropTypes.func
 };
