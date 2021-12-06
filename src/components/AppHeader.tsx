@@ -172,7 +172,7 @@ export default function AppHeader(props) {
 
   const hrefOptions = {
     0: {title: 'Launch App', href: '#/trade'},
-    1: {title: 'Token Feed', href: '#/feed'},
+    1: {title: 'Token List', href: '#/feed'},
     2: {title: 'Swap Tokens', href: '#/trade'}
   }
 
@@ -180,7 +180,24 @@ export default function AppHeader(props) {
     document.location.href = href;
   }
 
-  const balance = parseInt(props.metamask.balance) / 10 ** 18
+  const [balance, setBalance] = useState(BigInt(props.metamask.balance) / BigInt(10 ** 18))
+  useEffect(() => {
+
+    if (!props.metamask.provider || !props.metamask.currentAccount) {
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      const web3Client = new Web3(props.metamask.provider)
+      web3Client.eth.getBalance(props.metamask.currentAccount)
+      .then(bal => {
+        setBalance(() => BigInt(bal) / BigInt(10 ** 18))
+      })
+    }, 1000);
+    return () => clearTimeout(timer);
+
+  }, [props.appState.blockNumber, props.metamask.provider, props.metamask.currentAccount])
+
   let balanceString = 'ETH: '
   let balanceBackground = 'rgba(0,0,0,0.6)'
   if (balance > 0 && balance < 1) {
@@ -190,7 +207,7 @@ export default function AppHeader(props) {
     balanceString += '99+'
   }
   else {
-    balanceString += Math.floor(balance)
+    balanceString += balance.toString()
   } 
   
   if (!props.metamask.currentAccount) {
@@ -212,7 +229,7 @@ export default function AppHeader(props) {
           {hrefOptions[props.pageId].title}
       </PageButton>
       <BalanceButtonBlock style={{backgroundColor: balanceBackground}}>
-        <BalanceBlock>{balanceString}</BalanceBlock>
+        <BalanceBlock hidden={props.pageId === 0}>{balanceString}</BalanceBlock>
         <ConnectButton pageId={props.pageId} metamask={props.metamask} rpcProvider={props.rpcProvider} connectMetamask={props.connectMetamask}/>
       </BalanceButtonBlock>
     </Header>
