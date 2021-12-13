@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/dexapp/static/css/main.420ad8c2.chunk.css",
+    "main.js": "/dexapp/static/js/main.b97d1c57.chunk.js",
+    "main.js.map": "/dexapp/static/js/main.b97d1c57.chunk.js.map",
+    "runtime-main.js": "/dexapp/static/js/runtime-main.c9daba4f.js",
+    "runtime-main.js.map": "/dexapp/static/js/runtime-main.c9daba4f.js.map",
+    "static/css/2.c0480a6a.chunk.css": "/dexapp/static/css/2.c0480a6a.chunk.css",
+    "static/js/2.ed81782e.chunk.js": "/dexapp/static/js/2.ed81782e.chunk.js",
+    "static/js/2.ed81782e.chunk.js.map": "/dexapp/static/js/2.ed81782e.chunk.js.map",
+    "static/js/3.69058252.chunk.js": "/dexapp/static/js/3.69058252.chunk.js",
+    "static/js/3.69058252.chunk.js.map": "/dexapp/static/js/3.69058252.chunk.js.map",
+    "index.html": "/dexapp/index.html",
+    "static/css/2.c0480a6a.chunk.css.map": "/dexapp/static/css/2.c0480a6a.chunk.css.map",
+    "static/css/main.420ad8c2.chunk.css.map": "/dexapp/static/css/main.420ad8c2.chunk.css.map",
+    "static/js/2.ed81782e.chunk.js.LICENSE.txt": "/dexapp/static/js/2.ed81782e.chunk.js.LICENSE.txt",
+    "static/media/logo.6ce24c58.svg": "/dexapp/static/media/logo.6ce24c58.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.c9daba4f.js",
+    "static/css/2.c0480a6a.chunk.css",
+    "static/js/2.ed81782e.chunk.js",
+    "static/css/main.420ad8c2.chunk.css",
+    "static/js/main.b97d1c57.chunk.js"
+  ]
+}
