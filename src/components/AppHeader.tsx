@@ -4,7 +4,7 @@ import logo from '../logo.svg'
 import styled from 'styled-components'
 import { Button, Spinner } from 'react-bootstrap'
 import { useEffect, useState } from 'react'
-
+import { formatEthAmount } from '../utils/utils'
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 
 declare const window: any;
@@ -172,15 +172,15 @@ export default function AppHeader(props) {
 
   const hrefOptions = {
     0: {title: 'Launch App', href: '#/trade'},
-    1: {title: 'Token List', href: '#/feed'},
-    2: {title: 'Swap Tokens', href: '#/trade'}
+    1: {title: 'Token List', href: '#/tokens'},
+    2: {title: 'Trade Tokens', href: '#/trade'}
   }
 
   const handlePageButtonClick = (e, href) => {
     document.location.href = href;
   }
 
-  const [balance, setBalance] = useState(BigInt(props.metamask.balance) / BigInt(10 ** 18))
+  const [balance, setBalance] = useState(parseFloat(props.metamask.balance) / (10 ** 18))
   useEffect(() => {
 
     if (!props.metamask.provider || !props.metamask.currentAccount) {
@@ -191,7 +191,7 @@ export default function AppHeader(props) {
       const web3Client = new Web3(props.metamask.provider)
       web3Client.eth.getBalance(props.metamask.currentAccount)
       .then(bal => {
-        setBalance(() => BigInt(bal) / BigInt(10 ** 18))
+        setBalance(parseFloat(bal) / (10 ** 18))
       })
     }, 1000);
     return () => clearTimeout(timer);
@@ -200,14 +200,14 @@ export default function AppHeader(props) {
 
   let balanceString = 'ETH: '
   let balanceBackground = 'rgba(0,0,0,0.6)'
-  if (balance > 0 && balance < 1) {
-    balanceString += '<1'
+  if (balance > 0 && balance < 0.1) {
+    balanceString += '<0.1'
   } 
   else if (balance > 99) {
     balanceString += '99+'
   }
   else {
-    balanceString += balance.toString()
+    balanceString += formatEthAmount(balance)
   } 
   
   if (!props.metamask.currentAccount) {
