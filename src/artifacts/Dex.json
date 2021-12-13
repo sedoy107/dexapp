@@ -171,7 +171,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -196,7 +197,8 @@
       "name": "deposit",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [],
@@ -226,7 +228,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -239,7 +242,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -263,7 +267,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -299,7 +304,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -328,7 +334,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -566,7 +573,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -647,7 +655,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -676,7 +685,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.8.10+commit.fc410830\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"trader\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"enum OrderBook.OrderType\",\"name\":\"orderType\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"OrderCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"trader\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"filled\",\"type\":\"uint256\"}],\"name\":\"OrderFilled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"trader\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"filled\",\"type\":\"uint256\"}],\"name\":\"OrderRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"addPair\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"tokenAddress\",\"type\":\"address\"}],\"name\":\"addToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"balances\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"orderId\",\"type\":\"uint256\"},{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"cancelOrder\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"enum OrderBook.OrderType\",\"name\":\"orderType\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"createOrder\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"}],\"name\":\"deposit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"deposit\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"getMarketPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"orderId\",\"type\":\"uint256\"},{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"getOrder\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"},{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"enum OrderBook.OrderType\",\"name\":\"orderType\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"trader\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"ticker1\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"ticker2\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"filled\",\"type\":\"uint256\"}],\"internalType\":\"struct OrderBook.Order\",\"name\":\"order\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"getOrderBook\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"},{\"internalType\":\"enum OrderBook.Side\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"enum OrderBook.OrderType\",\"name\":\"orderType\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"trader\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"ticker1\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"ticker2\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"filled\",\"type\":\"uint256\"}],\"internalType\":\"struct OrderBook.Order[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTokenList\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"tokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"}],\"internalType\":\"struct Wallet.Token[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"pairs\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"tickerTo\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"tickerFrom\",\"type\":\"bytes32\"}],\"name\":\"removePair\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"tokenList\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"tokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"tokenMapping\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"tokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"ticker\",\"type\":\"bytes32\"}],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"addToken(bytes32,address)\":{\"details\":\"Adds token to the wallet  Requirements: - `onlyOwner` can add a `token` - \"},\"cancelOrder(uint256,uint8,bytes32,bytes32)\":{\"details\":\"Cancel an order by setting isActive flag to false Algorithmic cost: O(n) Returns true if the order was cancelled. Returns false if the order was not found or had already been cancelled Reverts is the msg.sender doesn't match `trader` field.\"},\"createOrder(uint8,uint8,bytes32,bytes32,uint256,uint256)\":{\"details\":\"creates an order to swap two tokens: `price`   `orderType` defines the type of order to place  For market orders the price doesn't matter and can be zero.  Market order will not be created if the opposite side of the order book is empty.  Overrides `createOrder` function from OrderBook.sol\"},\"deposit()\":{\"details\":\"Deposit ether to the wallet for `msg.sender`'s account  Requirements: - `msg.sender` cannot be equal to this(address).\"},\"deposit(uint256,bytes32)\":{\"details\":\"Deposit tokens to the wallet for `msg.sender`'s account  Requirements: - `msg.sender` cannot be equal to `tokenAddress`. - Token `ticker` MUST be present in `tokenMapping`.\"},\"getTokenList()\":{\"details\":\"Get token list \"},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"},\"withdraw(uint256)\":{\"details\":\"Withdraw token @ `tokenAddress` contract for `msg.sender`'s account.  Requirements: - `msg.sender` MUST have a sufficient balance of ether to withdraw.\"},\"withdraw(uint256,bytes32)\":{\"details\":\"Withdraw token @ `tokenAddress` contract for `msg.sender`'s account.  Requirements: - `msg.sender` MUST have a sufficient balance of tokens being withdrawn. - Token `ticker` MUST be present in `tokenMapping`.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Dex.sol\":\"Dex\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Dex.sol\":{\"keccak256\":\"0x31050aba7d71ffa1cf24ee035c1dd84e3174656fe2fa92c0634c80157f9de2d1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://3f49d2cccb7fe6dc35dfb414c08e5fa8b61d4e1eb89e60f033379fc886b92026\",\"dweb:/ipfs/QmVSp1pKGdqxmFWWs8paohPKfwyXfqCmN1dDuiunKUeSdj\"]},\"project:/contracts/OrderBook.sol\":{\"keccak256\":\"0x708e40da525c48b7c8860c76741bfdadda4e7265265067e4bed8ea6699d18aed\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8e4ba90caf7ca182978b241ab1048b760c61196bcdb8ce70ff184577401377e6\",\"dweb:/ipfs/QmbUkJ4e2VAmSZ6zHvCB4RWcteUVBhjXojvo39DXdhNJBc\"]},\"project:/contracts/Wallet.sol\":{\"keccak256\":\"0x18dc8211a561c87bbe1cdb212067f05ec7662bdec0bb6fe27605bcdb80e20e9e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a717059f3fe63c8487272e62edc1c039ab0fb7a03ddd41aef69dc78f1310568b\",\"dweb:/ipfs/QmabA83yNDskN6H3jack2BoKCYSfk9jFaNFP1EaMT811qb\"]},\"project:/node_modules/@openzeppelin/contracts/access/Ownable.sol\":{\"keccak256\":\"0x6bb804a310218875e89d12c053e94a13a4607cdf7cc2052f3e52bd32a0dc50a1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b2ebbbe6d0011175bd9e7268b83de3f9c2f9d8d4cbfbaef12aff977d7d727163\",\"dweb:/ipfs/Qmd5c7Vxtis9wzkDNhxwc6A2QT5H9xn9kfjhx7qx44vpro\"]},\"project:/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0x027b891937d20ccf213fdb9c31531574256de774bda99d3a70ecef6e1913ed2a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://087318b21c528119f649899f5b5580566dd8d7b0303d4904bd0e8580c3545f14\",\"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL\"]},\"project:/node_modules/@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0x95098bd1d9c8dec4d80d3dedb88a0d949fa0d740ee99f2aa466bc308216ca6d5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7fec968dcd68e13961521fa3c7dd87baecad91a2653b19240e81f21cc4f3ba85\",\"dweb:/ipfs/QmaXtsYt4Mphm8XHNUfk2me1cF3ssS2SqDBNFpYAzMjomC\"]},\"project:/node_modules/@openzeppelin/contracts/utils/math/Math.sol\":{\"keccak256\":\"0x2cc1535d318fe533ffa4ad30de28f5abed305ff748bc72d0344072ac10007e29\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bdabbd463f6c33aeaf94e57e87716d80990f4bd6e62606bbab00db595d702d3c\",\"dweb:/ipfs/QmdZ6gNZbC4nGBiUxkvQXozB5jzFNLwr6127zUzvdePtrK\"]},\"project:/node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol\":{\"keccak256\":\"0x8666f020bd8fc9dc14f07e2ebc52b5f236ab4cdde7c77679b08cb2f94730043b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://163776cbf565c722232393aa2d62cbe8a2ffb5805986abf4906c00e1e07450a6\",\"dweb:/ipfs/QmPZoN9T3cb6o8bGhjBPZcz7im8T8DWhpr3tjLwhJJHx9N\"]}},\"version\":1}",
@@ -47827,6 +47837,12 @@
     "version": "0.8.10+commit.fc410830.Emscripten.clang"
   },
   "networks": {
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x7655616cc2511B60A69e107e6E2A670418B41202",
+      "transactionHash": "0xb218c286c71f43bfc53da3221775177146fbbfe8ffd4a2e326341f39dc2d83ef"
+    },
     "5777": {
       "events": {
         "0x8a0333324a3492150ffba30d2434f066fdf11da1d9b00c374439fb1ad62261d1": {
@@ -47999,12 +48015,13 @@
         }
       },
       "links": {},
-      "address": "0x0290FB167208Af455bB137780163b7B7a9a10C16",
-      "transactionHash": "0x4db8161b0963bfd05aa10a7f6d2b57984046df737f2c3a84eeb19cbee200144a"
+      "address": "0xcCf27643fa6C4FC844a8945b7c2F8bd562153649",
+      "transactionHash": "0x1f25b4f1c7894d5acd05813a3220cfecece66ac4674caa7f75b3b5f1802baddb"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-27T11:08:55.359Z",
+  "updatedAt": "2021-12-12T11:31:58.732Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {
