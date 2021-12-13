@@ -11,3 +11,7 @@ export const formatPriceUI = (quantity, decimals) => {
 export const formatPrice2 = (quantity) => {
     return new Intl.NumberFormat('en-EN', {maximumSignificantDigits: 9, }).format(quantity)
 }
+
+export const formatEthAmount = (quantity) => {
+    return new Intl.NumberFormat('en-EN', {maximumSignificantDigits: 2, maximumFractionDigits: 2}).format(quantity)
+}
