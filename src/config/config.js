@@ -15,12 +15,12 @@ const web3Networks = [
     {
       netId:0x2a,
       chainId: 0x2a,
-      url: 'https://speedy-nodes-nyc.moralis.io/a39f3ea430eb9a2061d4596f/eth/kovan',
+      url: 'wss://kovan.infura.io/ws/v3/ef7d535d2fae48ab9e620c46dbd8788a',
       name: 'Kovan Testnet'
     }
   ]
   
-const defaultWeb3Network = web3Networks[1]
+const defaultWeb3Network = web3Networks[2]
 
 module.exports = {
   web3Networks,
