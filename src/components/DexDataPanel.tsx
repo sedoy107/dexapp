@@ -344,7 +344,17 @@ function Orders(props) {
     const buttonTitle = showCompleted ? "Switch to Active Orders" : "Switch to Completed Orders"
 
     return (
-        !props.orderHistory 
+        !props.metamask.provider
+        ? 
+        <OrdersAwaitDiv>
+            <p>Web3 provider is not connected</p>
+        </OrdersAwaitDiv>
+        : !props.metamask.currentAccount
+        ? 
+        <OrdersAwaitDiv>
+            <p>Web3 account is not connected</p>
+        </OrdersAwaitDiv>
+        : !props.orderHistory 
         ? 
         <OrdersAwaitDiv>
             <Spinner animation="border" role="status">
@@ -400,7 +410,7 @@ export default function DexTradeInfo(props) {
                 <Orderbook orderBook={props.orderBook} appState={props.appState}/>
             </RowPanelBase>
             <RowPanelBase>
-                <Orders orderHistory={props.orderHistory} appState={props.appState} dexContract={props.dexContract}/>
+                <Orders orderHistory={props.orderHistory} appState={props.appState} dexContract={props.dexContract} metamask={props.metamask}/>
             </RowPanelBase>
         </ParentContainer>
         </GrandParentContainer>

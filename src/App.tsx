@@ -391,7 +391,7 @@ function App() {
         return [...tokens]
           .sort((a,b) => (a.ticker > b.ticker ? 1 : -1))
           .filter((i,p,a) => {return !p || i.ticker !== a[p - 1].ticker})
-          .map((token) => ({address: token.tokenAddress, ticker: token.ticker, decimals: token.decimals, symbol:Web3.utils.toAscii(token.ticker)}))
+          .map((token) => ({address: token.tokenAddress, ticker: token.ticker, decimals: token.decimals, symbol:Web3.utils.toUtf8(token.ticker)}))
       }
       
       // Check if any of the required states aren't ready yet
@@ -758,7 +758,7 @@ function App() {
               appstate={appState}
               dexcontract={dexContract}
             />
-            <DexDataPanel orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract}/>
+            <DexDataPanel orderBook={orderBook} orderHistory={orderHistory} appState={appState} dexContract={dexContract} metamask={metamask}/>
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={false}/>
           </PageContainer>
         </Background>
