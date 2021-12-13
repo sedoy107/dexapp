@@ -90,9 +90,17 @@ function ConnectButton(props) {
    */
   function makeNewState() : IConnectButtonState {
 
-    if(!props.metamask.provider || !props.rpcProvider) {
+    if(!props.rpcProvider) {
       return {
         title: <Spinner animation="border" variant='secondary' size='sm' />,
+        variant: 'warning',
+        pending: false
+      }
+    }
+
+    if(!props.metamask.provider) {
+      return {
+        title: 'Install Metamask',
         variant: 'warning',
         pending: false
       }
@@ -153,7 +161,7 @@ function ConnectButton(props) {
 
     setButtonState(() => {return makeNewState()})
   
-  },[props.rpcProvider, props.metamask])
+  },[props.rpcProvider, props.metamask.provider])
   
   return (
     <Button
