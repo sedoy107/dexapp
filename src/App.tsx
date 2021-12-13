@@ -20,6 +20,8 @@ import Web3 from 'web3'
 import { Subscription } from 'web3-core-subscriptions'
 import { BlockHeader } from 'web3-eth'
 import { Contract } from 'web3-eth-contract'
+// Constants
+import { START_BLOCK } from './utils/constants'
 
 const ERC20_ABI = require('../src/artifacts/ERC20.json').abi
 
@@ -130,7 +132,6 @@ function App() {
       const accounts = _isInitialConnect || !ethereum.isConnected() ? await ethereum.request({ method: 'eth_requestAccounts' }) : [ethereum.selectedAddress]
       const currentAccount = accounts.length === 0 ? null : accounts[0]
       const balance = currentAccount === null ? '0' : await metamaskRpcProvider.eth.getBalance(currentAccount)
-      console.log(`----------- ${balance}`)
       setMetamask(() : IMetamask => {
         return {
           provider: ethereum,
@@ -381,10 +382,12 @@ function App() {
      * - Set dexContract and appState states
      */
     const initApp = async () => {
-
+      
       // Aux function to get tokens from the contract 
       const getTokens = async (contract: Contract) => {
+        //debugger
         const tokens = await contract.methods.getTokenList().call()
+        //debugger
         return [...tokens]
           .sort((a,b) => (a.ticker > b.ticker ? 1 : -1))
           .filter((i,p,a) => {return !p || i.ticker !== a[p - 1].ticker})
@@ -395,7 +398,7 @@ function App() {
       if (!dexContract || !rpcProvider) {
         return false
       }
-
+      
       // Get current block number
       const currentBlock = await rpcProvider.provider.eth.getBlockNumber()
 
@@ -517,7 +520,7 @@ function App() {
      //useEffect cleanup:
      //return clean up callback
 
-  }, [dexContract, appState.pairedToken, appState.blockNumber])
+  }, [dexContract, appState.pairedToken, appState.baseToken, appState.blockNumber])
 
   /**
    * @dev Update Dex on pairedToken and currentAccount change
@@ -637,21 +640,22 @@ function App() {
     }
 
     const processPastEvents = async () => {
+      
       const evtOrderCreated = await dexContract.getPastEvents('OrderCreated', {
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
-        fromBlock: 0,
+        fromBlock: START_BLOCK,
         toBlock: 'latest'
       })
 
       const evtOrderFilled = await dexContract.getPastEvents('OrderFilled', {
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
-        fromBlock: 0,
+        fromBlock: START_BLOCK,
         toBlock: 'latest'
       })
 
       const evtOrderRemoved = await dexContract.getPastEvents('OrderRemoved', {
         filter: {trader: metamask.currentAccount ? metamask.currentAccount : ''},
-        fromBlock: 0,
+        fromBlock: START_BLOCK,
         toBlock: 'latest'
       })
 
@@ -687,6 +691,7 @@ function App() {
      * @dev React component lifecycle alias
      * */
     const componentWillMount = async () => {
+      
       processPastEvents()
       subscribe()
     }
@@ -699,7 +704,7 @@ function App() {
      //useEffect cleanup:
      return unsubscribe
 
-  }, [metamask.currentAccount])
+  }, [metamask.currentAccount, dexContract])
 
 
   const handleBaseTokenChange = (newBaseToken) => {
@@ -758,7 +763,7 @@ function App() {
           </PageContainer>
         </Background>
       </Route>
-      <Route exact path='/feed'>
+      <Route exact path='/tokens'>
         <Background>
           <PageContainer>
             <AppHeader title='DEX' appState={appState} pageId={2} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
