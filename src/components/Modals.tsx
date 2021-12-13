@@ -9,8 +9,9 @@ import { Contract } from 'web3-eth-contract'
 import './Modals.css'
 import TokenInput from './extra/TokenInput'
 import {BUY, SELL, MARKET, LIMIT, IOC, FOK, MOC } from '../utils/constants'
+import { WITHDRAW, DEPOSIT, MINT, BURN } from '../utils/constants'
 
-const ERC20_ABI = require('../../src/artifacts/ERC20.json').abi
+const ERC20_ABI = require('../../src/artifacts/TestToken.json').abi
 const DEX_ABI = require('../../src/artifacts/Dex.json').abi
 
 const ModalTitle = styled.p`
@@ -52,6 +53,9 @@ const TypeButton = styled(Button)`
   &:focus {
     box-shadow: none;
   } 
+`
+const ControlButton = styled(Button)`
+  width: 25%;
 `
 const TokenLabel = styled.div`
   width: 100px;
@@ -104,8 +108,8 @@ export function OrderModal(props) {
 
     const getMarket = async () => {
 
-      let buyMarket = '0'
-      let sellMarket = '0'
+      let buyMarket = order.market.buy
+      let sellMarket = order.market.sell
       try {
         buyMarket = await props.dexcontract.methods.getMarketPrice(SELL, props.appstate.baseToken.ticker, props.appstate.pairedToken.ticker).call()
       } catch (e) {}
@@ -124,7 +128,7 @@ export function OrderModal(props) {
     }) 
 
 
-  }, [props.metamask, props.appstate.blockNumber, props.appstate.baseToken, props.appstate.pairedToken, props.show])
+  }, [props.metamask.currentAccount, props.appstate.baseToken, props.appstate.pairedToken, props.show])
 
   useEffect(() => {
     setOrder(() => ({...defaultOrderState, amount: '0', price: '0'}))
@@ -258,8 +262,8 @@ export function OrderModal(props) {
         </TokenInfoParent>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant='warning' onClick={sendTx} disabled={disableSubmit}>{txState === TX_PENDING ? <Spinner animation="border" variant='secondary' size='sm'/> : 'Submit'}</Button>
-        <Button variant='secondary' onClick={props.onHide}>Close</Button>
+        <ControlButton variant='warning' onClick={sendTx} disabled={disableSubmit}>{txState === TX_PENDING ? <Spinner animation="border" variant='secondary' size='sm'/> : 'Submit'}</ControlButton>
+        <ControlButton variant='secondary' onClick={props.onHide}>Close</ControlButton>
       </Modal.Footer>
     </Modal>
   )
@@ -276,6 +280,17 @@ export function ConnectionMessageModal(props) {
   )
 }
 
+export function TokenErrorModal(props) {
+  return (
+      <Modal show={props.show} onHide={props.handleClose} size='sm' contentClassName='ModalDark'>
+        <Modal.Header closeButton>
+          <Modal.Title as={ModalTitle}>Error</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{props.text}</Modal.Body>
+      </Modal>
+  )
+}
+
 export function OrderCancelModal(props) {
 
   const text = !props.order ? '' : `Order ${props.order.id} will be flagged as cancelled. The order will remain in the active orders until it reaches the top of the order book where it will be popped off without being executed`
@@ -287,8 +302,8 @@ export function OrderCancelModal(props) {
         </Modal.Header>
         <Modal.Body>{text}</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={props.handleClose}>Back</Button>
-          <Button variant="primary" onClick={props.handleConfirmedAction}>Confirm</Button>
+          <ControlButton variant="secondary" onClick={props.handleClose}>Back</ControlButton>
+          <ControlButton variant="primary" onClick={props.handleConfirmedAction}>Confirm</ControlButton>
         </Modal.Footer>
       </Modal>
   )
@@ -296,16 +311,28 @@ export function OrderCancelModal(props) {
 
 export function FundsModal(props) {
 
-  const WITHDRAW = 0
-  const DEPOSIT = 1
-
-  const theme = props.params.action === DEPOSIT 
-  ? {title: 'Deposit Funds to Dex', variant: 'info', confirm: 'Deposit'} 
-  : {title: 'Withdraw Funds from Dex', variant: 'danger', confirm: 'Withdraw'}
-
-  const maxValue = props.params.action === DEPOSIT
-  ? props.params.balance.wallet
-  : props.params.balance.dex
+  let theme, maxValue
+  switch(props.params.action) {
+    case DEPOSIT:
+      theme = {title: 'Deposit Funds to Dex', variant: 'info', confirm: 'Deposit'} 
+      maxValue = props.params.balance.wallet
+      break
+    case WITHDRAW:
+      theme = {title: 'Withdraw Funds from Dex', variant: 'danger', confirm: 'Withdraw'}
+      maxValue = props.params.balance.dex
+      break
+    case MINT:
+      theme = {title: 'Mint ERC20 tokens', variant: 'info', confirm: 'Mint'} 
+      maxValue = '1000000'
+      break
+    case BURN:
+      theme = {title: 'Burn ERC20 Tokens', variant: 'danger', confirm: 'Burn'}
+      maxValue = props.params.balance.wallet
+      break
+    default:
+      console.error("Wrong action parameter");
+  }
+  
 
   const [spinner, setSpinner] = useState(false)
   const [amount, setAmount] = useState('0')
@@ -330,8 +357,8 @@ export function FundsModal(props) {
           </TokenInfoHorizontal>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={props.handleClose}>Back</Button>
-          <Button variant={theme.variant} onClick={() => {
+          <ControlButton variant="secondary" onClick={props.handleClose}>Back</ControlButton>
+          <ControlButton variant={theme.variant} onClick={() => {
             setSpinner(() => true)
             props.handleConfirmed({...props.params, amount: amount})
             .then(() => setSpinner(false))
@@ -339,7 +366,7 @@ export function FundsModal(props) {
             props.handleClose()
           }}>
             {spinner ? <Spinner animation="border" variant='secondary' size='sm'/>  : theme.confirm}
-          </Button>
+          </ControlButton>
         </Modal.Footer>
       </Modal>
   )

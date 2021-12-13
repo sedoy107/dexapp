@@ -3,11 +3,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Table, Spinner, Button } from 'react-bootstrap'
 import { ORDER_SIDE, ORDER_TYPE } from '../utils/enums'
 import { formatPrice2, formatPrice, formatPriceUI } from '../utils/utils'
-import { FundsModal } from './Modals'
+import { FundsModal, TokenErrorModal } from './Modals'
 import React from 'react'
 import Web3 from 'web3'
+import { WITHDRAW, DEPOSIT, MINT, BURN } from '../utils/constants'
 
-const ERC20_ABI = require('../../src/artifacts/ERC20.json').abi
+
+const ERC20_ABI = require('../../src/artifacts/TestToken.json').abi
 const DEX_ABI = require('../../src/artifacts/Dex.json').abi
 
 
@@ -37,6 +39,23 @@ const ScrollableTable = styled.div`
     overflow-y: scroll;
     height: 100%;
 `
+const ActionButton = styled(Button)`
+    border-radius: 0;
+    background-color: rgba(0,0,0,0.0);
+    border: none;
+`
+const DepositButton = styled(ActionButton)`
+    color: #00abff;
+`
+const WithdrawButton = styled(ActionButton)`
+    color: #f00;
+`
+const MintButton = styled(ActionButton)`
+    color: #00ff21;
+`
+const BurnButton = styled(ActionButton)`
+    color: orange;
+`
 
 const rowStyle = {
     padding: '0 .5rem',
@@ -49,10 +68,6 @@ const headerStyle = {
 }
 export default function TokenList(props) {
 
-    const WITHDRAW = 0
-    const DEPOSIT = 1
-
-    const title = 'Tokens'
     const [tokens, setTokens] = useState<any>([])
     const [showModal, setShowModal] = useState(false)
     const [modalParams, setModalParams] = useState<any>({
@@ -63,6 +78,8 @@ export default function TokenList(props) {
         balance: {dex: '0', wallet: '0'},
         action: 0
     })
+    const [showErrorModal, setShowErrorModal] = useState(false)
+    const [errorText, setErrorText] = useState('') 
 
     /**
      * get tokens here. Kicks in on blockNumber, dexContract and metamask state changes
@@ -108,6 +125,10 @@ export default function TokenList(props) {
             return
         }
         
+        if (props.metamask.provider.chainId != props.rpcProvider.chainId) {
+            return
+        }
+        
         updateBalances()
 
     }, [updateBalances, getWalletBalance, getDexBalance])
@@ -120,28 +141,78 @@ export default function TokenList(props) {
         setModalParams(() => ({...token, action: WITHDRAW}))
         setShowModal(() => true)
     }
+    const handleMint = async (token) => {
+        if (token.address === '0x0000000000000000000000000000000000000000') {
+            setErrorText(() => `Can't mint native coin ${token.symbol}. Please use official faucet`)
+            setShowErrorModal(() => true)
+            return
+        }
+        setModalParams(() => ({...token, action: MINT}))
+        setShowModal(() => true)
+    }
+    const handleBurn = async (token) => {
+        if (token.address === '0x0000000000000000000000000000000000000000') {
+            setErrorText(() => `Token ${token.symbol} can't be burned`)
+            setShowErrorModal(() => true)
+            return
+        }
+        setModalParams(() => ({...token, action: BURN}))
+        setShowModal(() => true)
+    }
     const handleConfirmed = async (params) => {
         
-        const web3Client = new Web3(props.metamask.provider);
+        const web3Client = new Web3(props.metamask.provider)
         const dex = new web3Client.eth.Contract(DEX_ABI, props.dexContract._address)
+        const erc20 = new web3Client.eth.Contract(ERC20_ABI, params.address)
         
         if (params.address === "0x0000000000000000000000000000000000000000") {
-            params.action === DEPOSIT
-            ? await dex.methods['deposit()']().send({from: props.metamask.currentAccount, value: params.amount })
-            : await dex.methods['withdraw(uint256)'](params.amount).send({from: props.metamask.currentAccount })
+            switch (params.action) {
+                case DEPOSIT:
+                    await dex.methods['deposit()']().send({from: props.metamask.currentAccount, value: params.amount })
+                    break
+                case WITHDRAW:
+                    await dex.methods['withdraw(uint256)'](params.amount).send({from: props.metamask.currentAccount })
+                    break
+                case MINT:
+                    break
+                case BURN:
+                    break
+                default:
+                    console.error("Wrong action paramter")
+            } 
         }
         else {
-            if (params.action === DEPOSIT) {
-                const erc20 = new web3Client.eth.Contract(ERC20_ABI, params.address)
-                await erc20.methods.approve(props.dexContract._address, params.amount).send({from: props.metamask.currentAccount})
-                await dex.methods['deposit(uint256,bytes32)'](params.amount, params.ticker).send({from: props.metamask.currentAccount})
-            }
-            else {
-                await dex.methods['withdraw(uint256,bytes32)'](params.amount, params.ticker).send({from: props.metamask.currentAccount})
+            switch (params.action) {
+                case DEPOSIT:
+                    await erc20.methods.approve(props.dexContract._address, params.amount).send({from: props.metamask.currentAccount})
+                    await dex.methods['deposit(uint256,bytes32)'](params.amount, params.ticker).send({from: props.metamask.currentAccount})
+                    break
+                case WITHDRAW:
+                    await dex.methods['withdraw(uint256,bytes32)'](params.amount, params.ticker).send({from: props.metamask.currentAccount})
+                    break
+                case MINT:
+                    try {
+                        await erc20.methods.mint(props.metamask.currentAccount, params.amount).send({from: props.metamask.currentAccount})
+                    } catch (e) {
+                        setErrorText(() => `Token ${params.symbol} can't be minted. Use official ${params.symbol} faucet`)
+                        setShowErrorModal(() => true)
+                    }
+                    break
+                case BURN:
+                    try {
+                        await erc20.methods.burn(props.metamask.currentAccount, params.amount).send({from: props.metamask.currentAccount})
+                    } catch (e) {
+                        setErrorText(() => `Token ${params.symbol} can't be burned`)
+                        setShowErrorModal(() => true)
+                    }
+                    break
+                default:
+                    console.error("Wrong action paramter")
             }
         }
         updateBalances()
     }
+
     const rows = tokens.map((token) => {
         const {symbol, ticker, address, decimals, balance} = token
         return (<tr key={ticker}>
@@ -151,8 +222,10 @@ export default function TokenList(props) {
             <td style={rowStyle}>{formatPriceUI(balance.wallet, decimals)}</td>
             <td style={rowStyle}>{decimals}</td>
             <td style={rowStyle}>
-                <Button variant='info' onClick={() => handleDeposit(token)}><i className="fas fa-plus"/></Button>
-                <Button variant='danger' onClick={() => handleWithdrawal(token)}><i className="fas fa-minus"/></Button>
+                <DepositButton variant='primary' onClick={() => handleDeposit(token)}><i className="fas fa-arrow-left"/></DepositButton>
+                <WithdrawButton variant='primary' onClick={() => handleWithdrawal(token)}><i className="fas fa-arrow-right"/></WithdrawButton>
+                <MintButton variant='primary' onClick={() => handleMint(token)}><i className="fas fa-coins"/></MintButton>
+                <BurnButton variant='primary' onClick={() => handleBurn(token)}><i className="fas fa-burn"/></BurnButton>
             </td>
         </tr>
     )})
@@ -167,6 +240,12 @@ export default function TokenList(props) {
                     handleClose={() => setShowModal(false)} 
                     params={modalParams}
                     handleConfirmed={handleConfirmed}
+                />
+                <TokenErrorModal 
+                    show={showErrorModal} 
+                    handleShow={() => setShowErrorModal(true)} 
+                    handleClose={() => setShowErrorModal(false)} 
+                    text={errorText}
                 />
                 <ScrollableTable>
                     <Table striped hover borderless>
