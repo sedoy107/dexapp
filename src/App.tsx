@@ -734,7 +734,7 @@ function App() {
       <Route exact path='/welcome'>
         <Background>
           <PageContainer>
-            <AppHeader title='DEX' appState={appState} pageId={0} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
+            <AppHeader title='ERC20 DEX' appState={appState} pageId={0} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             <Welcome />
             <AppStatusBar rpcProvider={rpcProvider} appState={appState} hidden={true}/>
           </PageContainer>
@@ -743,7 +743,7 @@ function App() {
       <Route exact path='/trade'>
         <Background>
           <PageContainer>
-            <AppHeader title='DEX' appState={appState} pageId={1} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
+            <AppHeader title='ERC20 DEX' appState={appState} pageId={1} rpcProvider={rpcProvider} metamask={metamask} connectMetamask={connectMetamask}/>
             <TokenPicker 
               appState={appState} 
               dexContract={dexContract} 

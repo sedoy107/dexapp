@@ -179,7 +179,7 @@ function ConnectButton(props) {
 export default function AppHeader(props) {
 
   const hrefOptions = {
-    0: {title: 'Launch App', href: '#/trade'},
+    0: {title: 'Click to Start', href: '#/trade'},
     1: {title: 'Token List', href: '#/tokens'},
     2: {title: 'Trade Tokens', href: '#/trade'}
   }
