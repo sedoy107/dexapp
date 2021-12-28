@@ -3,7 +3,7 @@ import Web3 from 'web3'
 import logo from '../logo.svg'
 import styled from 'styled-components'
 import { Button, Spinner } from 'react-bootstrap'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { formatEthAmount } from '../utils/utils'
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 
@@ -88,8 +88,7 @@ function ConnectButton(props) {
   /**
    * @dev Compose new button state
    */
-  function makeNewState() : IConnectButtonState {
-
+  const makeNewState = useCallback(() : IConnectButtonState => {
     if(!props.rpcProvider) {
       return {
         title: <Spinner animation="border" variant='secondary' size='sm' />,
@@ -134,7 +133,7 @@ function ConnectButton(props) {
       variant: variant,
       pending: false
     }
-  }
+  }, [props.rpcProvider, props.metamask.provider, props.metamask.currentAccount])
 
   const [buttonState, setButtonState] = useState<IConnectButtonState>(() => {return makeNewState()})
 
@@ -161,7 +160,7 @@ function ConnectButton(props) {
 
     setButtonState(() => {return makeNewState()})
   
-  },[props.rpcProvider, props.metamask.provider])
+  },[makeNewState])
   
   return (
     <Button
