@@ -120,12 +120,15 @@ export function OrderModal(props) {
       return {buy: buyMarket, sell: sellMarket}
     }
 
-    getBalances().then((balances) => {
+    getBalances()
+    .then((balances) => {
       setOrder((prevOrder) => ({...prevOrder, balances: balances}))
     })
+    .catch((err) => console.error(err))
     getMarket().then((market) => {
       setOrder((prevOrder) => ({...prevOrder, market: market}))
-    }) 
+    })
+    .catch((err) => console.error(err))
 
 
   }, [props.metamask.currentAccount, props.appstate.baseToken, props.appstate.pairedToken, props.show])
