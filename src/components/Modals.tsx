@@ -355,7 +355,7 @@ export function FundsModal(props) {
             value=''
             max={maxValue}
             decimals={props.params.decimals} 
-            onChange={(v) => (setAmount(() => (BigInt(v) * BigInt(10 ** props.params.decimals)).toString()))}
+            onChange={(v) => (setAmount(() => (BigInt(parseFloat(v) * 10 ** props.params.decimals)).toString()))}
             />
           </TokenInfoHorizontal>
         </Modal.Body>
